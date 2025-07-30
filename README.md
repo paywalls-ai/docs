@@ -1,44 +1,73 @@
-# Mintlify Starter Kit
+# [Paywalls.ai](http://Paywalls.ai)
 
-Use the starter kit to get your docs deployed and ready to customize.
+## Code-free, intelligent Paywalls for AI Assistants, Agents and MCP Tools.
 
-Click the green **Use this template** button at the top of this repo to copy the Mintlify starter kit. The starter kit contains examples with
+Change a URL. Set a Price. Make Money. In your app, In ChatGPT, Telegram or WhatsApp.
 
-- Guide pages
-- Navigation
-- Customizations
-- API reference pages
-- Use of popular components
+![Image(7) Pn](/images/image\(7\).png)
 
-**[Follow the full quickstart guide](https://starter.mintlify.com/quickstart)**
+[Paywalls.ai](http://Paywalls.ai) is a smart proxy between your assistant and APIs, turning any model into a monetizable endpoint. Just swap your model URL—we handle usage metering, dynamic pricing, and seamless payments. Charge by prompt, token, or call, with logic that adapts to each user’s context or balance. No subscriptions, no custom billing flows. We plug into any interface and settle on-chain, so you can start earning instantly.
 
-## Development
+| **Use on any LLM**                 | **Build on any tool**                                                       | **Monetize on any Client**                        |
+| :--------------------------------- | :-------------------------------------------------------------------------- | :------------------------------------------------ |
+| \<OpenAI, Anthropic, Deepseek,..\> | \<Zapier, FlowXO, n8n, Flowise, langschain, [Crew.ai](http://Crew.ai), ..\> | \<Telegram, WhatsApp, Messenger, XMTP, Signal,…\> |
 
-Install the [Mintlify CLI](https://www.npmjs.com/package/mint) to preview your documentation changes locally. To install, use the following command:
+# All-in-One, Ready-to-Go
+
+✅ Meter every prompt and user
+
+✅ Bill users for usage
+
+✅ Block access when you want
+
+➕ integrated top-up (or use your Stripe)
+
+# Fast to implement
+
+Swap Your OpenAI URL and Key
 
 ```
-npm i -g mint
+client.api_base = "<https://api.paywalls.ai/v1>"
+client.api_key = "sk-paywalls-xxxxxxxx"
 ```
 
-Run the following command at the root of your documentation, where your `docs.json` is located:
+# Customer and Use Cases
 
-```
-mint dev
-```
+\<CommunityAviation\>
 
-View your local preview at `http://localhost:3000`.
+# Clear Benefits
 
-## Publishing changes
+- **For code and no-code:** Build you assistant and agents on any framework or platform including Zapier and n8n.
+- **Simple Pricing:** Automatic usage based pricing based on actual token usage — not guesses or flat rates.
+- **Get higher conversions:** Users start instantly—no wallet setup, no registration, no upfront barrier.
+- **AI-Powered Selling:** The paywall negotiates in natural language, not static, dumb checkout forms and layers.
+- **Deploy Anywhere:** Launch on Telegram, Slack, ChatGPT and Claude—any platform, not just one marketplace.
 
-Install our GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app) to propagate changes from your repo to your deployment. Changes are deployed to production automatically after pushing to the default branch.
+# Editions
 
-## Need help?
+| **Headless**                           | **Plug-n-Play**                                        | **Open Source**                       |
+| :------------------------------------- | :----------------------------------------------------- | :------------------------------------ |
+| Integrate it with your Stripe account. | Start monetizing in minutes without code on any client | Run it on your own servers and infra. |
+| \$50/month \+ 1% of LLM fees.          | Pay-per-use                                            | Coming soon\*                         |
+| ✅ Metering                             |                                                        |                                       |
+| ✅ Billing                              |                                                        |                                       |
+| ✅ Paywall                              | ✅ Metering                                             |                                       |
+| ✅ Billing                              |                                                        |                                       |
+| ✅ Paywall                              | ✅ Metering                                             |                                       |
+| ✅ Billing                              |                                                        |                                       |
+| ✅ Paywall                              |                                                        |                                       |
+|                                        | ✅ Payment Gateway                                      |                                       |
+| ✅ Crypto support                       |                                                        |                                       |
+| ✅ Telegram Stars                       | ➕ Payment Gateway                                      |                                       |
+| ➕ Crypto support                       |                                                        |                                       |
+| ➕ Telegram Stars                       |                                                        |                                       |
+|                                        | ✅ Notifications                                        |                                       |
+| ✅ Marketplace                          |                                                        |                                       |
 
-### Troubleshooting
+**Connect**
 
-- If your dev environment isn't running: Run `mint update` to ensure you have the most recent version of the CLI.
-- If a page loads as a 404: Make sure you are running in a folder with a valid `docs.json`.
+Allow creators to build and monetize their services with your users. Contact us to learn more.
 
-### Resources
-- [Mintlify documentation](https://mintlify.com/docs)
-- [Mintlify community](https://mintlify.com/community)
+**MCP Tools**
+
+learn how [Paywalls.ai](http://Paywalls.ai) allows you to monetize MCP tools inside ChatGPT, Claude and others assisstants.

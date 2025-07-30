@@ -1,80 +1,68 @@
 ---
 title: "Quickstart"
-description: "Start building awesome documentation in minutes"
 ---
 
-## Get started in three steps
+[**Paywalls.ai**](http://Paywalls.ai) is a programmable paywall and usage-based billing proxy for OpenAI-compatible APIs. It enables developers to monetize access to LLM models without modifying the client-side integration logic. The proxy layer intercepts API calls, validates the user’s connection and balance, calculates cost, charges accordingly, and only then forwards the request to the LLM provider.
 
-Get your documentation site running locally and make your first customization.
+This system is designed to be **fully compatible with OpenAI’s API specification**, making it drop-in for existing applications using `/v1/chat/completions` or other endpoints.
 
-### Step 1: Set up your local environment
+OpenAPI specification: https://api.paywalls.ai/v1/openapi.yml
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+### 🔧 Core Components
 
-### Step 2: Deploy your changes
+| Component                                | Description                                                                                                     |
+| :--------------------------------------- | :-------------------------------------------------------------------------------------------------------------- |
+| **Proxy endpoint** (`/chat/completions`) | Handles LLM chat requests. Enforces paywall rules and proxies to OpenAI-compatible model providers.             |
+| **Model registry** (`/models`)           | Lists supported models and their pricing structure (per-token and per-request).                                 |
+| **User endpoints** (`/user/*`)           | Provides optional utilities to manage paywall connection, top-up, balance lookup, and manual charging.          |
+| **Pricing engine**                       | Calculates usage cost based on configured model rates and request parameters (e.g., tokens, request flat fees). |
+| **Metering system**                      | Measures prompt and completion token usage (if token-based billing is enabled).                                 |
+| **Connection logic**                     | Ensures only pre-approved users can be charged. If not connected, the API returns a `connect` link.             |
+| **Top-up system**                        | When user balance is low, returns a `topup` link instead of charging or forwarding the request.                 |
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+### 🔄 Request Lifecycle
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+1. **Client sends request** to `/chat/completions` (OpenAI-compatible).
+2. **Authorization checked** via API key in `Authorization: Bearer ...`.
+3. **User state verified**:
+   - If not connected → return `connected: false` \+ `connect` link.
+   - If connected, check balance:
+     - Insufficient balance → return `connected: true` \+ `topup` link.
+     - Sufficient balance → continue.
+4. **Cost computed**:
+   - Request fee (if configured).
+   - Prompt \+ completion token cost (based on actual usage or estimate).
+5. **Charge issued**:
+   - Balance deducted.
+   - Charge recorded (optional metadata for reconciliation).
+6. **Request forwarded** to the real model provider (e.g., OpenAI, OpenRouter, local LLM).
+7. **Streaming or full response** returned to client.
+8. **Usage record stored** (optional, for dashboards, analytics, or reconciliation).
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+### 💸 Billing Options
 
-### Step 3: Go live
+You can configure billing logic per paywall or per model:
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+- **Per-request fee**: A flat cost applied for every request.
+- **Per-token billing**: Based on measured prompt and completion token usage.
+- **Subscriptions or memberships**: Can be handled externally; proxy checks for plan validity via your own logic.
+- **Manual charges**: Use `/user/charge` to deduct custom fees.
 
-## Next steps
+### 🧰 Developer Usage
 
-Now that you have your docs running, explore these key features:
+- **Integrate once**: No changes needed on the frontend. Just point requests to `https://paywalls.ai/api/v1/chat/completions` instead of `api.openai.com`.
+- **Authenticate your app**: Use your **developer API key** in the `Authorization: Bearer YOUR_API_KEY` header. This key identifies your paywall configuration.
+- **Identify the user**:
+  - For **chat completions**, include the user’s ID either:
+    - As a `user` property in the JSON request body (OpenAI-compatible), or
+    - As an `X-Paywall-User` header (useful for non-OpenAI clients or middleware injection).
+  - For **all other endpoints** (e.g., `/user/charge`, `/user/balance`), pass the user ID in the required request field (typically in the JSON body).
+- **Track usage**: Monitor charges, user sessions, and connection status through API responses or optional integrations (e.g., webhooks—coming soon).
+- **Custom workflows**: Use `/user/connect`, `/user/topup`, and `/user/charge` to build your own onboarding, billing, or subscription logic.
 
-<CardGroup cols={2}>
+### ✅ Benefits
 
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
-</CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
+- Drop-in compatible with OpenAI API.
+- Eliminates the need to build billing, metering, or access control logic.
+- Works with any frontend or backend stack.
+- Enables new monetization models like pay-per-message, microtransactions, and token quotas.

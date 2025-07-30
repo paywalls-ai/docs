@@ -1,0 +1,79 @@
+---
+title: "Overview"
+description: "Paywalls.ai is a proxy layer for OpenAI-compatible LLM APIs that adds automatic metering, per-request payments, and developer revenue sharing. Developers define how much to charge users for LLM usage, and Paywall handles billing, metering, and fund distribution."
+---
+
+## Developer Setup
+
+When a developer registers and generates an API key, they configure:
+
+- **Provider & API Key**: Choose one LLM provider (e.g. OpenAI, OpenRouter) and connect your credentials. Alternatively, use Paywall’s built-in provider access (no credentials required).
+- **Model Pricing Table**: Configure end-user prices for each supported model:
+  - Use default pricing (e.g. from OpenRouter)
+  - Override prices per model
+  - Restrict availability of specific models
+  - Add pricing for custom models
+
+> 📌 Each API key is tied to a single provider, but each request can target any model that provider supports, and is priced dynamically per model.
+
+## Revenue & Payment Distribution
+
+For every paid request, Paywall splits the user payment into 3 parts:
+
+| Component             | Description                                                          |
+| :-------------------- | :------------------------------------------------------------------- |
+| **Developer revenue** | A fixed percentage (e.g. 5%) of user spend, configurable per API key |
+| **Paywall fee**       | Always 1% of user spend (platform fee)                               |
+| **LLM cost**          | Remaining balance (e.g. 94%) used to cover inference cost            |
+
+## Access Modes
+
+### **BYOK (Bring Your Own Key)**
+
+- **LLM requests are sent using your own API key**
+- You are billed directly by the provider
+- You define your own model pricing
+- Paywall charges the user and splits revenue as:
+
+| Role              | Portion of User Spend                                                   |
+| :---------------- | :---------------------------------------------------------------------- |
+| Developer revenue | **5%** (or your configured %), **plus** the LLM cost portion (e.g. 94%) |
+| Paywall fee       | **1%**                                                                  |
+| LLM Cost          | **Paid by developer**                                                   |
+
+✅ Full control
+
+✅ Access to all models supported by provider
+
+✅ More profit margin if you negotiate good rates with your model provider
+
+⚠️ More effort to setup automated payments to model provider
+
+### **Built-in Provider Access**
+
+- **Requests are fulfilled using Paywall's provider credentials**
+- No setup needed — instant access
+- You define model pricing, just like with BYOK
+- Paywall charges the user and splits revenue as:
+
+| Role         | Portion of User Spend                                         |
+| :----------- | :------------------------------------------------------------ |
+| Developer    | **5%** (or your configured %)                                 |
+| Paywall      | **1%** platform fee                                           |
+| LLM Provider | **Paid by Paywall** using the remaining user spend (e.g. 94%) |
+
+✅ Zero setup
+
+✅ No need to handle model provider payments
+
+⚠️ Fixed models list, less flexibility
+
+### Summary Table
+
+|                    | BYOK                           | Built-in Provider             |
+| :----------------- | :----------------------------- | :---------------------------- |
+| Who pays for LLM   | Developer                      | Paywall                       |
+| Developer revenue  | 5% (or configured) \+ LLM cost | 5% (or configured)            |
+| Paywall fee        | 1%                             | 1%                            |
+| Developer control  | Full                           | Limited to exposed models     |
+| Model availability | Any supported by provider      | Only those offered by Paywall |
