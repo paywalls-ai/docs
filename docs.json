@@ -74,12 +74,12 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Website",
+          "anchor": "Paywalls.ai",
           "href": "https://paywalls.ai",
           "icon": "globe"
         },
         {
-          "anchor": "Wallet",
+          "anchor": "AI Wallet",
           "href": "https://wallet.paywalls.ai",
           "icon": "wallet"
         }
