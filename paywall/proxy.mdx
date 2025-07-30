@@ -3,3 +3,33 @@ title: "Proxy"
 description: "Learn about Proxy API settings."
 icon: "chevrons-left-right-ellipsis"
 ---
+
+### Overview
+
+The Paywall Proxy sits between your backend and the actual LLM API provider (e.g., OpenAI, Anthropic or OpenRouter). It enforces billing, usage limits, and authentication — while preserving OpenAI API compatibility.
+
+### Endpoint
+
+Replace OpenAI’s endpoint with:
+
+```
+https://api.paywalls.ai/v1
+```
+
+### Authentication
+
+Use the `Authorization: Bearer YOUR_API_KEY` header to authenticate your app (not the user).
+
+### User Identification
+
+Each request must specify the user:
+
+- Option 1: `user` field in the request body (recommended for OpenAI-compatible clients)
+- Option 2: `X-Paywall-User` header (recommended for middleware injection)
+- Option 3: `user` URL path parameter, e.g. `https://api.paywalls.ai/v1/{user}`  (when no other option works)
+
+### Behavior
+
+- If user is not connected → returns a connect link.
+- If user has no balance → returns a top-up link.
+- If both valid → deduct fee and forward to the model provider.

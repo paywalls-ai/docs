@@ -3,3 +3,30 @@ title: "Billing"
 description: "Learn about different billing strategies."
 icon: "receipt-cent"
 ---
+
+### Overview
+
+[Paywalls.ai](http://Paywalls.ai) supports multiple billing strategies, which you can combine or configure independently per model or paywall.
+
+### Available Strategies
+
+#### 1. Per-Request Fee
+
+Charge a flat fee for every request, regardless of token usage.
+
+#### 2. Per-Token Billing
+
+Charge based on the number of tokens:
+
+- **Prompt tokens** (input)
+- **Completion tokens** (model response)
+
+Measured automatically by the proxy or estimated if needed.
+
+#### 3. Manual Charges
+
+Use the `/user/charge` endpoint to deduct custom amounts for features or workflows outside of chat completions.
+
+#### 4. Subscriptions (optional)
+
+You can implement your own subscription system and call [Paywalls.ai](http://Paywalls.ai) only for validation. Coming soon.

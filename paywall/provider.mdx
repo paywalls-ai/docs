@@ -3,3 +3,36 @@ title: "Provider"
 description: "Learn about Paywalls.ai built-in LLM provider."
 icon: "server"
 ---
+
+### Overview
+
+[Paywalls.ai](http://Paywalls.ai) can relay requests to **external OpenAI-compatible providers**, or you can use the **built-in **[**Paywalls.ai**](http://Paywalls.ai)** LLM provider**. This simplifies setup and avoids managing your own API keys.
+
+### Built-in Provider
+
+- Hosted and maintained by [Paywalls.ai](http://Paywalls.ai)
+- Pre-configured for fast start
+- Usage fees are deducted from user wallets automatically
+
+### Supported Models
+
+Use the `/models` endpoint to list all models available through the built-in provider. Each model includes:
+
+- `id` (used in requests)
+- `display_name`
+- `description`
+- `pricing`: per-token and per-request rates 
+
+Example:
+
+```json
+{
+  "id": "gpt-3.5-turbo",
+  "display_name": "GPT-3.5 Turbo",
+  "pricing": {
+    "prompt": "0.5",
+    "completion": "1",
+    "request": "0.01"
+  }
+}
+```
