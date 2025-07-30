@@ -1,5 +1,6 @@
 ---
 title: "Introduction"
+description: "Welcome to the **Paywalls.ai API Reference**. Here you’ll find detailed information on every endpoint, including request parameters, response formats, and examples."
 ---
 
 <Note>
@@ -8,8 +9,42 @@ title: "Introduction"
 
 ## Authentication
 
-All API endpoints are authenticated using Bearer tokens:
+All API requests to GetProfile require authentication using your **paywall's API key**.
 
-```json
-"Authorization": "Bearer sk-paywalls-..."
+### How it works
+
+Each paywall in your account has a unique secret API key. This key identifies your paywall and ensures that only you can access and modify your data.
+
+- **Keep your API key secure**
+- **Rotate keys in your dashboard if needed**
+
+### Adding the API key to requests
+
+You must include your API key in the `Authorization` header of every request to the paywalls.ai API:
+
+```shellscript
+Authorization: Bearer YOUR_API_KEY
 ```
+
+For example:
+
+```bash
+curl -X GET "https://api.paywalls.ai/v1/models" \
+-H "Authorization: Bearer YOUR_API_KEY"
+```
+
+### Where to find your API key
+
+1. Log in to your Dashboard.
+2. Go to Paywalls section
+3. Copy the secret APY key for the paywall you want to integrate
+
+<Warning>
+  If your API key is compromised, rotate it from the dashboard to protect your data.
+</Warning>
+
+### Tips for API key usage
+
+- Never commit your API key to public repositories.
+- Use environment variables (process.env.YOUR_API_KEY) in your backend for secure usage.
+- Periodically review and rotate keys to maintain security.
