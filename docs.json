@@ -33,7 +33,7 @@
             ]
           },
           {
-            "group": "Chat",
+            "group": "Chat completion",
             "pages": [
               "api-reference/chat/completions/post"
             ]
