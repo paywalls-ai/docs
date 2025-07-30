@@ -20,6 +20,16 @@
               "overview",
               "quickstart"
             ]
+          },
+          {
+            "group": "Paywall",
+            "pages": [
+              "paywall/payments",
+              "paywall/proxy",
+              "paywall/provider",
+              "paywall/billing",
+              "paywall/configuration"
+            ]
           }
         ]
       },
