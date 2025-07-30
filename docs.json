@@ -7,6 +7,9 @@
     "light": "#07C983",
     "dark": "#15803D"
   },
+  "icons": {
+    "library": "lucide"
+  },
   "favicon": "/favicon.svg",
   "navigation": {
     "tabs": [
@@ -90,8 +93,9 @@
   "navbar": {
     "links": [
       {
-        "label": "Support",
-        "href": "mailto:support@paywalls.ai"
+        "label": "GitHub",
+        "href": "https://github.com/grindery-io",
+        "icon": "github"
       }
     ],
     "primary": {
@@ -102,6 +106,7 @@
   },
   "footer": {
     "socials": {
+      "website": "https://paywalls.ai",
       "x": "https://x.com",
       "github": "https://github.com/grindery-io",
       "linkedin": "https://linkedin.com"
