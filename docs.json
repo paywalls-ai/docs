@@ -3,9 +3,9 @@
   "theme": "mint",
   "name": "Paywalls.ai API Documentation",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#05B75E",
+    "light": "#05B75E",
+    "dark": "#05B75E"
   },
   "icons": {
     "library": "lucide"
