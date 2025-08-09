@@ -1,80 +1,149 @@
 ---
 title: "Overview"
-description: "Paywalls.ai is a proxy layer for OpenAI-compatible LLM APIs that adds automatic metering, per-request payments, and developer revenue sharing. Developers define how much to charge users for LLM usage, and Paywall handles billing, metering, and fund distribution."
+description: "What is Paywalls.ai?"
 icon: "table-of-contents"
 ---
 
+**Paywalls.ai** is a programmable paywall and usage-based billing proxy for OpenAI-compatible APIs.\
+It enables developers to monetize LLM usage without modifying client-side integration logic.
+
+By sitting between your app and the inference provider, the Paywalls.ai proxy:
+
+- **Validates** the user’s connection and balance
+- **Calculates** the cost of each request in real time
+- **Applies** your pricing rules
+- **Charges** the user before forwarding the request
+- **Relays** the model response without added latency
+
+The system is **fully compatible** with the OpenAI API spec, making it drop-in for existing apps using `/v1/chat/completions` or other standard endpoints.
+
 ## Developer Setup
 
-When a developer registers and generates an API key, they configure:
+When you register and generate an API key, you configure:
 
-- **Provider & API Key**: Choose one LLM provider (e.g. OpenAI, OpenRouter) and connect your credentials. Alternatively, use Paywall’s built-in provider access (no credentials required).
-- **Model Pricing Table**: Configure end-user prices for each supported model:
-  - Use default pricing (e.g. from OpenRouter)
-  - Override prices per model
-  - Restrict availability of specific models
-  - Add pricing for custom models
+### Provider & API Key
 
-> 📌 Each API key is tied to a single provider, but each request can target any model that provider supports, and is priced dynamically per model.
+- Choose one LLM provider (e.g. OpenAI, OpenRouter) and connect your credentials
+- Or use Paywalls.ai’s **built-in provider access** — no credentials required
+
+### Model Pricing Table
+
+- Use default pricing (e.g. from OpenRouter)
+- Override prices per model
+- Restrict availability of specific models
+- Add pricing for custom models
+
+<Note>
+  **Each API key is tied to a single provider**\
+  However, every request can target any model that provider supports, with dynamic pricing per model.
+</Note>
 
 ## Revenue & Payment Distribution
 
-For every paid request, Paywall splits the user payment into 3 parts:
+For each paid request, user spend is split into three parts:
 
 | Component             | Description                                                          |
 | :-------------------- | :------------------------------------------------------------------- |
 | **Developer revenue** | A fixed percentage (e.g. 5%) of user spend, configurable per API key |
 | **Paywall fee**       | Always 1% of user spend (platform fee)                               |
-| **LLM cost**          | Remaining balance (e.g. 94%) used to cover inference cost            |
+| **LLM cost**          | Remaining balance (e.g. 94%) to cover inference cost                 |
 
 ## Access Modes
 
-### **BYOK (Bring Your Own Key)**
+### BYOK (Bring Your Own Key)
 
-- **LLM requests are sent using your own API key**
+- Requests use **your own API key**
 - You are billed directly by the provider
-- You define your own model pricing
-- Paywall charges the user and splits revenue as:
+- You set your own model pricing
+- Paywalls.ai charges the user and splits revenue:
 
-| Role              | Portion of User Spend                                                   |
-| :---------------- | :---------------------------------------------------------------------- |
-| Developer revenue | **5%** (or your configured %), **plus** the LLM cost portion (e.g. 94%) |
-| Paywall fee       | **1%**                                                                  |
-| LLM Cost          | **Paid by developer**                                                   |
+| Role              | Portion of User Spend                                   |
+| :---------------- | :------------------------------------------------------ |
+| Developer revenue | 5% (or configured %) **\+** LLM cost portion (e.g. 94%) |
+| Paywall fee       | 1%                                                      |
+| LLM cost          | Paid directly by developer                              |
 
-✅ Full control
+✅ Full control\
+✅ Access to all models your provider supports\
+✅ Higher profit margin if you have good provider rates\
+⚠ More effort — you must handle provider payments
 
-✅ Access to all models supported by provider
+### Built-in Provider Access
 
-✅ More profit margin if you negotiate good rates with your model provider
-
-⚠️ More effort to setup automated payments to model provider
-
-### **Built-in Provider Access**
-
-- **Requests are fulfilled using Paywall's provider credentials**
+- Requests are fulfilled with **Paywalls.ai’s credentials**
 - No setup needed — instant access
-- You define model pricing, just like with BYOK
-- Paywall charges the user and splits revenue as:
+- You set model pricing just like with BYOK
+- Paywalls.ai charges the user and splits revenue:
 
-| Role         | Portion of User Spend                                         |
-| :----------- | :------------------------------------------------------------ |
-| Developer    | **5%** (or your configured %)                                 |
-| Paywall      | **1%** platform fee                                           |
-| LLM Provider | **Paid by Paywall** using the remaining user spend (e.g. 94%) |
+| Role              | Portion of User Spend                               |
+| :---------------- | :-------------------------------------------------- |
+| Developer revenue | 5% (or configured %)                                |
+| Paywall fee       | 1%                                                  |
+| LLM provider      | Paid by Paywalls.ai from remaining spend (e.g. 94%) |
 
-✅ Zero setup
-
-✅ No need to handle model provider payments
-
-⚠️ Fixed models list, less flexibility
+✅ Zero setup\
+✅ No need to manage provider payments\
+⚠ Limited to models offered by Paywalls.ai
 
 ### Summary Table
 
-|                    | BYOK                           | Built-in Provider             |
-| :----------------- | :----------------------------- | :---------------------------- |
-| Who pays for LLM   | Developer                      | Paywall                       |
-| Developer revenue  | 5% (or configured) \+ LLM cost | 5% (or configured)            |
-| Paywall fee        | 1%                             | 1%                            |
-| Developer control  | Full                           | Limited to exposed models     |
-| Model availability | Any supported by provider      | Only those offered by Paywall |
+| Feature                | BYOK                           | Built-in Provider         |
+| :--------------------- | :----------------------------- | :------------------------ |
+| **Who pays for LLM**   | Developer                      | Paywall                   |
+| **Developer revenue**  | 5% (or configured) \+ LLM cost | 5% (or configured)        |
+| **Paywall fee**        | 1%                             | 1%                        |
+| **Developer control**  | Full                           | Limited to exposed models |
+| **Model availability** | Any supported by provider      | Only Paywall’s models     |
+
+## Core Components
+
+| Component                                | Description                                                                                                              |
+| :--------------------------------------- | :----------------------------------------------------------------------------------------------------------------------- |
+| **Proxy Endpoint** (`/chat/completions`) | Handles LLM chat requests. Enforces paywall rules and proxies to OpenAI-compatible model providers.                      |
+| **Model Registry** (`/models`)           | Lists supported models and their pricing (per-token and per-request).                                                    |
+| **User Endpoints** (`/user/*`)           | Tools to manage paywall connection, top-up, balance lookup, and manual charges.                                          |
+| **Pricing Engine**                       | Calculates the usage cost based on your configured model rates and request parameters (tokens, request flat fees, etc.). |
+| **Metering System**                      | Measures prompt and completion token usage (if token-based billing is enabled).                                          |
+| **Connection Logic**                     | Ensures only connected (authorized) users can be charged. Returns a connect link if not connected.                       |
+| **Top-Up System**                        | Returns a top-up link when balance is low, blocking access until funds are added.                                        |
+
+## Request Lifecycle
+
+1. **Request sent to the proxy** → Your app calls `https://api.paywalls.ai/v1/chat/completions`
+2. **Authentication** → `Authorization: Bearer ...` API key identifies your paywall
+3. **User identification** → Pass `user` in body or `X-Paywall-User` header
+4. **Connection & balance check**
+   - Not connected → return `connect` link
+   - Low balance → return `topup` link
+   - Connected \+ funded → proceed
+5. **Cost computation** → Request fee \+ token costs
+6. **Charge execution** → Deduct balance, record charge
+7. **Forward request** → To chosen LLM provider
+8. **Return response** → Stream or send full response, log usage
+
+## Pricing Engine
+
+The pricing engine ensures **every request is profitable** by:
+
+- Looking up applicable model pricing
+- Measuring token usage (prompt \+ completion)
+- Applying per-request fees and/or per-token rates
+- Adding developer-defined margins
+- Recording charges in the billing ledger
+
+## Billing Options
+
+- **Per request** — fixed price per API call
+- **Per token** — based on prompt \+ completion token usage
+- **Manual charges** — via `/user/charge`
+- **Subscriptions** — handled externally with proxy access checks
+
+## Why Use Paywalls.ai?
+
+- **Drop-in compatible** with OpenAI API
+- **Any model, any provider** — with dynamic pricing
+- **Multiple monetization models** — pay-per-message, microtransactions, token quotas
+- **Integrates anywhere** — code and no-code platforms
+- **No billing infrastructure needed** — Paywalls.ai handles metering, charging, and balances
+
+---

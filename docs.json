@@ -20,8 +20,8 @@
             "group": "Getting started",
             "pages": [
               "index",
-              "overview",
-              "quickstart"
+              "quickstart",
+              "overview"
             ]
           },
           {

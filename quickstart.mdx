@@ -3,67 +3,70 @@ title: "Quickstart"
 icon: "rocket"
 ---
 
-[**Paywalls.ai**](http://Paywalls.ai) is a programmable paywall and usage-based billing proxy for OpenAI-compatible APIs. It enables developers to monetize access to LLM models without modifying the client-side integration logic. The proxy layer intercepts API calls, validates the user’s connection and balance, calculates cost, charges accordingly, and only then forwards the request to the LLM provider.
+## 1. What is [Paywalls.ai](http://Paywalls.ai)?
 
-This system is designed to be **fully compatible with OpenAI’s API specification**, making it drop-in for existing applications using `/v1/chat/completions` or other endpoints.
+[Paywalls.ai](http://Paywalls.ai) is a **programmable paywall and usage-based billing proxy** for OpenAI-compatible APIs.\
+It lets you monetize any LLM without changing your frontend code — simply route your API requests through [Paywalls.ai](http://Paywalls.ai) instead of calling the model provider directly.
 
-OpenAPI specification: https://api.paywalls.ai/v1/openapi.yml
+<Info>
+  **OpenAPI spec:** https://api.paywalls.ai/v1/openapi.yml
+</Info>
 
-### 🔧 Core Components
+## 2. Create Your Account & API Key
 
-| Component                                | Description                                                                                                     |
-| :--------------------------------------- | :-------------------------------------------------------------------------------------------------------------- |
-| **Proxy endpoint** (`/chat/completions`) | Handles LLM chat requests. Enforces paywall rules and proxies to OpenAI-compatible model providers.             |
-| **Model registry** (`/models`)           | Lists supported models and their pricing structure (per-token and per-request).                                 |
-| **User endpoints** (`/user/*`)           | Provides optional utilities to manage paywall connection, top-up, balance lookup, and manual charging.          |
-| **Pricing engine**                       | Calculates usage cost based on configured model rates and request parameters (e.g., tokens, request flat fees). |
-| **Metering system**                      | Measures prompt and completion token usage (if token-based billing is enabled).                                 |
-| **Connection logic**                     | Ensures only pre-approved users can be charged. If not connected, the API returns a `connect` link.             |
-| **Top-up system**                        | When user balance is low, returns a `topup` link instead of charging or forwarding the request.                 |
+1. Sign up at [Paywalls.ai Dashboard](https://dashboard.paywalls.ai)
+2. Create a **Paywall** in the dashboard
+3. Copy your **API Key** (you’ll use this in the `Authorization` header)
 
-### 🔄 Request Lifecycle
+## 3. Point Your App to the Proxy
 
-1. **Client sends request** to `/chat/completions` (OpenAI-compatible).
-2. **Authorization checked** via API key in `Authorization: Bearer ...`.
-3. **User state verified**:
-   - If not connected → return `connected: false` \+ `connect` link.
-   - If connected, check balance:
-     - Insufficient balance → return `connected: true` \+ `topup` link.
-     - Sufficient balance → continue.
-4. **Cost computed**:
-   - Request fee (if configured).
-   - Prompt \+ completion token cost (based on actual usage or estimate).
-5. **Charge issued**:
-   - Balance deducted.
-   - Charge recorded (optional metadata for reconciliation).
-6. **Request forwarded** to the real model provider (e.g., OpenAI, OpenRouter, local LLM).
-7. **Streaming or full response** returned to client.
-8. **Usage record stored** (optional, for dashboards, analytics, or reconciliation).
+Replace your OpenAI endpoint and key with the [Paywalls.ai](http://Paywalls.ai) endpoint and your API key.
 
-### 💸 Billing Options
+**Example (Node.js with **`openai`**npm package):**
 
-You can configure billing logic per paywall or per model:
+```javascript
+import OpenAI from "openai";
 
-- **Per-request fee**: A flat cost applied for every request.
-- **Per-token billing**: Based on measured prompt and completion token usage.
-- **Subscriptions or memberships**: Can be handled externally; proxy checks for plan validity via your own logic.
-- **Manual charges**: Use `/user/charge` to deduct custom fees.
+const client = new OpenAI({
+  apiKey: "sk-paywalls-xxxxxxxx",
+  baseURL: "https://api.paywalls.ai/v1"
+});
 
-### 🧰 Developer Usage
+const completion = await client.chat.completions.create({
+  model: "gpt-3.5-turbo",
+  messages: [{ role: "user", content: "Hello world" }],
+  user: "user_123" // or pass via X-Paywall-User header
+});
 
-- **Integrate once**: No changes needed on the frontend. Just point requests to `https://api.paywalls.ai/v1/chat/completions` instead of `api.openai.com`.
-- **Authenticate your app**: Use your **developer API key** in the `Authorization: Bearer YOUR_API_KEY` header. This key identifies your paywall configuration.
-- **Identify the user**:
-  - For **chat completions**, include the user’s ID either:
-    - As a `user` property in the JSON request body (OpenAI-compatible), or
-    - As an `X-Paywall-User` header (useful for non-OpenAI clients or middleware injection).
-  - For **all other endpoints** (e.g., `/user/charge`, `/user/balance`), pass the user ID in the required request field (typically in the JSON body).
-- **Track usage**: Monitor charges, user sessions, and connection status through API responses or optional integrations (e.g., webhooks—coming soon).
-- **Custom workflows**: Use `/user/connect`, `/user/topup`, and `/user/charge` to build your own onboarding, billing, or subscription logic.
+console.log(completion.choices[0].message.content);
+```
 
-### ✅ Benefits
+<Note>
+  **Note:** You can pass the user ID in the request body (`user` property) or in an `X-Paywall-User` header.
+</Note>
 
-- Drop-in compatible with OpenAI API.
-- Eliminates the need to build billing, metering, or access control logic.
-- Works with any frontend or backend stack.
-- Enables new monetization models like pay-per-message, microtransactions, and token quotas.
+## 4. How It Works (In Short)
+
+1. **Proxy receives your request**\
+   Identifies the user and checks their paywall connection and balance.
+2. **If not connected** → returns a `connect` link\
+   **If balance too low** → returns a `topup` link
+3. **If authorized** → forwards the request to the LLM provider
+4. **Bills in real time** based on actual usage (tokens, per-request fees, or both)
+
+## 5. Billing Options
+
+You can configure each paywall or model to bill by:
+
+- **Per request** — fixed price per API call
+- **Per token** — based on measured prompt & completion tokens
+- **Manual charges** — via `/user/charge`
+- **Subscriptions** — handled externally or via custom logic
+
+## 6. Benefits
+
+- **Drop-in compatible** with the OpenAI API
+- No custom billing or metering code required
+- Works with any frontend/backend stack
+- Supports pay-per-message, microtransactions, and token quotas
+- Use with **code** or **no-code** tools (Zapier, n8n, Flowise, etc.)
