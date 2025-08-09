@@ -1,76 +1,59 @@
 ---
 title: "Introduction"
-description: "Paywalls.ai is a no-code, real-time proxy that sits between AI assistants and inference providers, metering usage, applying dynamic pricing, and handling payments—so developers can monetize any model, anywhere, with guaranteed margins."
+description: "Paywalls.ai is a no-code, real-time proxy that sits between AI assistants and inference providers.  It meters usage, applies dynamic pricing, and handles payments—so developers can monetize any model, anywhere, with guaranteed margins."
 icon: "book-open"
 ---
 
-[Paywalls.ai](http://Paywalls.ai) allows developers to rapidly implement automatic pricing rules, “paywalls,” and user charges by simply routing prompts through the [Paywalls.ai](http://Paywalls.ai) proxy instead of sending them directly to the chosen inference provider. 
+By routing prompts through the [Paywalls.ai](http://Paywalls.ai) proxy instead of sending them directly to an inference provider, you can add **automatic pricing rules, “paywalls,” and user charges** without writing complex billing code.
 
-When a prompt reaches the proxy, it identifies (and, if needed, authenticates) the user and requests a charge authorization, much like a credit-card pre-authorization. 
+## How It Works
 
-- If authorization fails, the user receives a “paywall,” which can either be a static message or an interaction with an AI-powered custom-built agent designed to guide or assist them in topping up. This top-up can be done through the developer’s Stripe account (or other payment gateways) or [Paywalls.ai](http://Paywalls.ai)’s integrated payment features. 
-- If authorization passes, the prompt is forwarded to the inference provider defined by the developer in the logic of the assistant. 
+1. **Proxy the request**\
+   You swap your LLM API base URL and key for Paywalls.ai’s:
 
-When the response returns, the proxy relays it immediately to the assistant and end user without delay. In parallel, [Paywalls.ai](http://Paywalls.ai) determines the cost of that prompt and its response based on the inference provider, model, and tokens used, applies the developer’s pricing rules, and records the charges in the billing system—all in real time.
+   ```python
+   client.api_base = "https://api.paywalls.ai/v1"
+   client.api_key = "sk-paywalls-xxxxxxxx"
+   ```
 
-The advantage of this proxy-based approach is that developers can let users choose and switch models at runtime, with costs calculated on the fly and pricing rules ensuring every request is profitable.
+   The proxy receives the prompt instead of the inference provider.
+2. **Identify and authorize the user**\
+    The proxy identifies (and, if needed, authenticates) the user.\
+    It then requests a charge authorization—similar to a credit-card pre-authorization.
+3. **Handle failed authorizations**\
+    If the user’s balance is low or they are not connected:
+   - Show a paywall message, or
+   - Launch an AI-powered paywall agent that helps them top up via **your Stripe account** or **Paywalls.ai’s integrated payments**.
+4. **Forward the request**\
+    If authorization passes, the proxy forwards the prompt to the chosen inference provider.
+5. **Bill in real time**\
+    When the response returns:
+   - The proxy relays it instantly to your assistant/user (no added latency).
+   - In parallel, Paywalls.ai calculates the cost (based on provider, model, and tokens), applies your pricing rules, and records the charge.
 
-| **Use on any LLM**                 | **Build on any tool**                                                       | **Monetize on any Client**                        |
-| :--------------------------------- | :-------------------------------------------------------------------------- | :------------------------------------------------ |
-| \<OpenAI, Anthropic, Deepseek,..\> | \<Zapier, FlowXO, n8n, Flowise, langschain, [Crew.ai](http://Crew.ai), ..\> | \<Telegram, WhatsApp, Messenger, XMTP, Signal,…\> |
+## Why a Proxy-Based Approach?
 
-# All-in-One, Ready-to-Go
+- **Dynamic model switching** – Let users choose models at runtime while keeping every request profitable.
+- **Real-time cost control** – Prices calculated on the fly, not guessed in advance.
+- **Platform agnostic** – Works with any model, provider, or deployment platform.
 
-✅ Meter every prompt and user
+## Supported Ecosystem
 
-✅ Bill users for usage
+| **LLMs**                              | **Build Tools**                                                     | **Client Platforms**                         |
+| :------------------------------------ | :------------------------------------------------------------------ | :------------------------------------------- |
+| OpenAI, Anthropic, DeepSeek, Mistral… | Zapier, FlowXO, n8n, Flowise, LangChain, [Crew.ai](http://Crew.ai)… | Telegram, WhatsApp, Messenger, XMTP, Signal… |
 
-✅ Block access when you want
+## All-in-One, Ready-to-Go
 
-➕ integrated top-up (or use your Stripe)
+✅ Meter every prompt and user\
+✅ Bill users for usage\
+✅ Block access when you want\
+➕ Integrated top-up (or use your own Stripe)
 
-# Fast to implement
+## Fast to Implement
 
-Swap Your OpenAI URL and Key
-
-```python
-client.api_base = "<https://api.paywalls.ai/v1>"
-client.api_key = "sk-paywalls-xxxxxxxx"
-```
-
-# Clear Benefits
-
-- **For code and no-code:** Build you assistant and agents on any framework or platform including Zapier and n8n.
-- **Simple Pricing:** Automatic usage based pricing based on actual token usage — not guesses or flat rates.
-- **Get higher conversions:** Users start instantly—no wallet setup, no registration, no upfront barrier.
-- **AI-Powered Selling:** The paywall negotiates in natural language, not static, dumb checkout forms and layers.
-- **Deploy Anywhere:** Launch on Telegram, Slack, ChatGPT and Claude—any platform, not just one marketplace.
-
-# Editions
-
-| **Headless**                           | **Plug-n-Play**                                        | **Open Source**                       |
-| :------------------------------------- | :----------------------------------------------------- | :------------------------------------ |
-| Integrate it with your Stripe account. | Start monetizing in minutes without code on any client | Run it on your own servers and infra. |
-| \$50/month \+ 1% of LLM fees.          | Pay-per-use                                            | Coming soon\*                         |
-| ✅ Metering                             |                                                        |                                       |
-| ✅ Billing                              |                                                        |                                       |
-| ✅ Paywall                              | ✅ Metering                                             |                                       |
-| ✅ Billing                              |                                                        |                                       |
-| ✅ Paywall                              | ✅ Metering                                             |                                       |
-| ✅ Billing                              |                                                        |                                       |
-| ✅ Paywall                              |                                                        |                                       |
-|                                        | ✅ Payment Gateway                                      |                                       |
-| ✅ Crypto support                       |                                                        |                                       |
-| ✅ Telegram Stars                       | ➕ Payment Gateway                                      |                                       |
-| ➕ Crypto support                       |                                                        |                                       |
-| ➕ Telegram Stars                       |                                                        |                                       |
-|                                        | ✅ Notifications                                        |                                       |
-| ✅ Marketplace                          |                                                        |                                       |
-
-**Connect**
-
-Allow creators to build and monetize their services with your users. Contact us to learn more.
-
-**MCP Tools**
-
-learn how [Paywalls.ai](http://Paywalls.ai) allows you to monetize MCP tools inside ChatGPT, Claude and others assisstants.
+- **Code or no-code**: Works with any framework or tool.
+- **Usage-based pricing**: Automatically bill based on actual token usage, not estimates.
+- **Frictionless onboarding**: Users start instantly—no wallet setup, no registration.
+- **AI-powered selling**: Natural language paywall interactions instead of static checkout forms.
+- **Deploy anywhere**: Launch on Telegram, Slack, ChatGPT, Claude—any platform.
