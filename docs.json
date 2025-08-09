@@ -110,6 +110,21 @@
       "x": "https://x.com",
       "github": "https://github.com/paywalls-ai",
       "linkedin": "https://linkedin.com"
-    }
+    },
+    "links": [
+      {
+        "header": "Legal",
+        "items": [
+          {
+            "label": "Privacy Policy",
+            "href": "https://docs.paywalls.ai/privacy"
+          },
+          {
+            "label": "Terms of Service",
+            "href": "https://docs.paywalls.ai/terms"
+          }
+        ]
+      }
+    ]
   }
 }
