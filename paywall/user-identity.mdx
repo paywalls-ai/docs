@@ -20,7 +20,7 @@ Providing a user ID is **mandatory** for all billable endpoints (e.g., `/chat/co
 
 [Paywalls.ai](https://paywalls.ai) supports three ways to specify the user for maximum flexibility across clients, SDKs, and middleware.
 
-### Option 1:`user`**field in the request body**
+### Option 1: `user` field in the request body
 
 ✅ _Recommended for OpenAI-compatible clients_
 
@@ -44,7 +44,7 @@ Content-Type: application/json
 
 This is the **cleanest** and most portable method — the `user` travels with the request payload and works in any OpenAI-compatible client.
 
-### Option 2: `X-Paywall-User`**header**
+### Option 2: `X-Paywall-User` header
 
 ✅ _Best for middleware injection_
 
@@ -59,7 +59,7 @@ Content-Type: application/json
 
 This is ideal if you want to **inject** user IDs at the network or middleware level without touching the original request body.
 
-### **Option 3: URL Path Parameter**
+### Option 3: URL Path Parameter
 
 ⚠ _Fallback when nothing else fits your system_
 
