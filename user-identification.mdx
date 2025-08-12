@@ -20,7 +20,7 @@ Providing a user ID is **mandatory** for all billable endpoints (e.g., `/chat/co
 
 [Paywalls.ai](https://paywalls.ai) supports three ways to specify the user for maximum flexibility across clients, SDKs, and middleware.
 
-### **Option 1: **`user`**field in the request body**  ✅ _Recommended for OpenAI-compatible clients_
+### \*\*Option 1: \*\*`user`**field in the request body**  ✅ _Recommended for OpenAI-compatible clients_
 
 Most OpenAI SDKs (Node, Python, etc.) already support a `user` field in the request body for `/chat/completions` and similar endpoints.
 
@@ -42,7 +42,7 @@ Content-Type: application/json
 
 This is the **cleanest** and most portable method — the `user` travels with the request payload and works in any OpenAI-compatible client.
 
-### **Option 2: **`X-Paywall-User`**header**  ✅ _Best for middleware injection_
+### \*\*Option 2: \*\*`X-Paywall-User`**header**  ✅ _Best for middleware injection_
 
 When modifying the request body isn’t convenient (e.g., for streaming requests or proxy middleware), send the user ID in a **custom header**:
 
@@ -94,7 +94,7 @@ Once a request is received:
 
 ## Best Practices
 
-- **Always use Option 1 (body **`user`**field)**  if possible — it's OpenAI-spec compatible and future-proof.
+- \*\*Always use Option 1 (body \*\*`user`**field)**  if possible — it's OpenAI-spec compatible and future-proof.
 - Ensure user IDs are **unique per end-user** but **consistent** across requests for accurate billing.
 - Avoid exposing sensitive personal information as `user` values — use internal IDs instead.
 - If using Option 2 or 3, confirm your client or middleware passes the user ID on **every** request.
