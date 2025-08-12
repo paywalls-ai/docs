@@ -1,6 +1,7 @@
 ---
 title: "User Identity"
 description: "To process billing and enforce access control, every request to Paywalls.ai must include a user identity."
+icon: "circle-user"
 ---
 
 This identity allows the paywall to track usage, apply charges, and enforce connection/balance rules.
@@ -19,7 +20,9 @@ Providing a user ID is **mandatory** for all billable endpoints (e.g., `/chat/co
 
 [Paywalls.ai](https://paywalls.ai) supports three ways to specify the user for maximum flexibility across clients, SDKs, and middleware.
 
-### \*\*Option 1: \*\*`user`**field in the request body**  ✅ _Recommended for OpenAI-compatible clients_
+### Option 1:`user`**field in the request body**
+
+✅ _Recommended for OpenAI-compatible clients_
 
 Most OpenAI SDKs (Node, Python, etc.) already support a `user` field in the request body for `/chat/completions` and similar endpoints.
 
@@ -41,7 +44,9 @@ Content-Type: application/json
 
 This is the **cleanest** and most portable method — the `user` travels with the request payload and works in any OpenAI-compatible client.
 
-### \*\*Option 2: \*\*`X-Paywall-User`**header**  ✅ _Best for middleware injection_
+### Option 2: `X-Paywall-User`**header**
+
+✅ _Best for middleware injection_
 
 When modifying the request body isn’t convenient (e.g., for streaming requests or proxy middleware), send the user ID in a **custom header**:
 
@@ -54,7 +59,9 @@ Content-Type: application/json
 
 This is ideal if you want to **inject** user IDs at the network or middleware level without touching the original request body.
 
-### **Option 3: URL Path Parameter** ⚠ _Fallback when nothing else fits your system_
+### **Option 3: URL Path Parameter**
+
+⚠ _Fallback when nothing else fits your system_
 
 If neither body nor headers can be modified (e.g., legacy clients, hard-coded SDKs),\
 you can include the user ID directly in the URL path:
