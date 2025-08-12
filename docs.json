@@ -27,7 +27,7 @@
           {
             "group": "Paywall",
             "pages": [
-              "paywall/user-identification",
+              "paywall/user-identity",
               "paywall/payments",
               "paywall/proxy",
               "paywall/provider",
