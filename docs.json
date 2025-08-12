@@ -21,8 +21,7 @@
             "pages": [
               "index",
               "quickstart",
-              "overview",
-              "user-identification"
+              "overview"
             ]
           },
           {
@@ -32,7 +31,8 @@
               "paywall/proxy",
               "paywall/provider",
               "paywall/billing",
-              "paywall/configuration"
+              "paywall/configuration",
+              "paywall/user-identification"
             ]
           }
         ]
