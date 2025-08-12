@@ -27,12 +27,12 @@
           {
             "group": "Paywall",
             "pages": [
+              "paywall/user-identification",
               "paywall/payments",
               "paywall/proxy",
               "paywall/provider",
               "paywall/billing",
-              "paywall/configuration",
-              "paywall/user-identification"
+              "paywall/configuration"
             ]
           }
         ]
