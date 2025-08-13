@@ -1,0 +1,214 @@
+---
+title: "MCP"
+description: "This guide shows how to charge users for MCP tools using the Paywalls.ai charging endpoint before executing the tool action.
+"
+---
+
+## What you’ll build
+
+- A **pre-charge hook** that runs before each MCP tool call.
+- If charge succeeds → run the tool.
+- If charge fails (not connected / low balance) → **return the paywall message verbatim** so the LLM can show the user a connect/top-up link.
+- All without changing your MCP tool logic.
+
+## High-level flow
+
+1. **Identify user** from the MCP request (session, token, or your auth system).
+2. **Call Paywalls charge endpoint** with `user` and `amount`.
+3. **Handle response**:
+   - `{ success: true }` → proceed to call the MCP tool.
+   - `{ success: false, message }` → return a message that **must be shown verbatim** to the user (it contains connect/top-up links and instructions).
+4. **Execute tool** and return the result.
+
+## Core charge snippet (drop-in)
+
+> This is the recommended pattern: pre-charge → branch on `success` → execute.
+
+```typescript
+server.registerTool(
+  "call",
+  {
+    title: "Call a tool",
+    description: `Call a tool by slug. You can query available tools with "queryTool". Put detailed instructions in "instruction".`,
+    inputSchema: {
+      appSlug: z.string({ description: 'App slug (from "queryTool").' }),
+      toolKey: z.string({ description: 'Tool key (from "queryTool").' }),
+      instruction: z.string({ description: "Detailed instructions for the tool." }),
+    },
+  },
+  async ({ appSlug, toolKey, instruction }, { authInfo, requestId }) => {
+    console.log(`[${authInfo?.extra?.userId}][${requestId}][S][call][${appSlug}/${toolKey}] ${instruction}`);
+
+    if (PAYWALL_KEY) {
+      if (!authInfo?.extra?.userId) {
+        return {
+          content: [{ type: "text", text: "You need to be logged in to use this tool. Please reconnect MCP in your LLM app." }],
+        };
+      }
+
+      // 💸 Charge before executing the tool
+      const resp = await axios
+        .post(
+          PAYWALL_URL, // e.g. "https://api.paywalls.ai/v1/user/charge"
+          { user: authInfo.extra.userId, amount: "0.001" }, // USD/USDC as string
+          { headers: { Authorization: `Bearer ${PAYWALL_KEY}` } }
+        )
+        .catch((e) => (isAxiosError(e) ? e.response : e));
+
+      if (resp?.status !== 200) {
+        console.log(`[${authInfo?.extra?.userId}][${requestId}] Paywall error ${resp?.status || "<unknown>"}`, resp?.data || resp);
+        return { content: [{ type: "text", text: "Sorry, there was an error processing your request." }] };
+      }
+
+      const { success, message } = resp.data;
+      if (!success) {
+        console.log(`[${authInfo?.extra?.userId}][${requestId}] ${message}`);
+        return {
+          content: [
+            {
+              type: "text",
+              // 👇 IMPORTANT: show message verbatim (contains connect/top-up UI)
+              text: `User needs to perform additional actions. Show these instructions verbatim:\n\n${message}`,
+            },
+          ],
+        };
+      }
+    }
+
+    // ✅ Charge passed — execute the tool
+    const client = await createClient({ userId: authInfo!.extra!.userId as string, appSlug });
+    try {
+      const result = await client.callTool({ name: toolKey, arguments: { instruction } });
+      console.log(`[${authInfo?.extra?.userId}][${requestId}][R] ${result.content?.[0].text || "<unknown>"}`);
+      client.close().catch(() => {});
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return result as any;
+    } catch (e) {
+      console.log(`[${authInfo?.extra?.userId}][${requestId}][E] ${String(e)}`, e);
+      throw e;
+    }
+  }
+);
+```
+
+**Notes**
+
+- `amount` is a string (e.g., `"0.001"`). Use **flat fee** or compute dynamically (see “Pricing strategies” below).
+- Paywalls API returns HTTP **200** both for success and for paywall-required flows; check the `success` boolean.
+- The `message` string is **ready to show** to the end user (contains connect/top-up links).
+
+## User identity in MCP
+
+You must provide a **stable user ID** on every billable call. That ID goes into the Paywalls `user` field.
+
+### Example: grabbing userId from Authorization (demo-only)
+
+> This is _not secure_ for production—use your own auth/SSO. Shown here to illustrate wiring.
+
+```
+// Modified from MCP TS SDK docs
+const handleSessionRequest = async (req: Request, res: Response) => {
+  const sessionId = req.headers["mcp-session-id"] as string | undefined;
+  if (!sessionId || !transports[sessionId]) {
+    res.status(400).send("Invalid or missing session ID");
+    return;
+  }
+
+  const m = /^Bearer (.+)$/.exec(req.headers.authorization || "");
+  const userId = m?.[1];
+
+  if (userId) {
+    (req as { auth?: AuthInfo }).auth = {
+      // pseudo fields for demonstration
+      accessToken: m[1],
+      scopes: [],
+      refreshToken: m[1],
+      expiresAt: Math.floor(Date.now() / 1000 + 3600),
+      extra: { userId }, // 👈 make userId available in tool handlers
+    };
+    res.locals.userId = userId;
+  }
+
+  const transport = transports[sessionId];
+  await transport.handleRequest(req, res);
+};
+```
+
+**Production tips**
+
+- Use your existing session/JWT/SSO to set a **stable internal user ID**.
+- Don't expose PII as `user` (don’t send emails/phone numbers).
+- If your MCP runs behind your own API, inject `X-Paywall-User` as a header in server-side calls to Paywalls.
+
+## Pricing strategies for MCP tools
+
+You decide how to price each tool call:
+
+- **Flat fee per call**: e.g., `"0.001"` USD per invocation.
+- **Tiered by tool**: different amounts per `toolKey`.
+- **Dynamic**: compute from input size, expected tokens, or external rates.
+- **Split charge**: pre-charge a minimum, then **post-charge** extra (via `user/charge`) based on actual usage.
+
+Example dynamic amount:
+
+```typescript
+const base = 0.0005;
+const complexity = Math.min(instruction.length / 500, 0.002);
+const amount = (base + complexity).toFixed(6);
+```
+
+## Enrich charge calls (metadata & idempotency)
+
+Add metadata to reconcile charges with tool runs:
+
+```typescript
+await axios.post(
+  PAYWALL_URL, // /user/charge
+  {
+    user: userId,
+    amount,
+    metadata: { requestId, appSlug, toolKey }, // 👈 searchable context
+  },
+  {
+    headers: {
+      Authorization: `Bearer ${PAYWALL_KEY}`,
+      "Idempotency-Key": requestId, // 👈 prevents double-charging on retries
+    },
+  }
+);
+```
+
+> We recommend an **Idempotency-Key** per tool call to avoid double billing on network retries.
+
+## Error handling patterns
+
+- **HTTP \!= success** → show a generic error and log `resp.status` \+ body.
+- **HTTP 200 \+ **`{ success: false, message }` → **return message verbatim** (it includes connect/top-up flows).
+- **Timeouts** → don’t charge; return a transient error (or the verbatim message if charge timed out with a paywall link).
+- **Race conditions** → put a short **cooldown** on the same `(userId, toolKey, requestId)` pair to avoid duplicate processing.
+
+## Environment variables
+
+```typescript
+PAYWALLS_API_KEY=sk-paywalls-xxxxxxxx
+PAYWALL_URL=https://api.paywalls.ai/v1/user/charge
+```
+
+## Testing locally
+
+- Use a **fake user ID** like `user_local_123`.
+- Start with a small amount, e.g. `"0.0001"`.
+- Trigger **not connected** → verify the MCP returns the message verbatim.
+- Trigger **low balance** → verify top-up path.
+- Trigger **success** → ensure your tool executes post-charge.
+
+## FAQ
+
+**Q: Can I charge _after_ the tool runs?**\
+A: Yes—use `/user/charge` again with the final amount, but we recommend **pre-charging** a minimum to avoid unpaid executions.
+
+**Q: Can I combine with the Chat Proxy?**\
+A: Absolutely. Use the Chat Proxy for LLM calls and `/user/charge` for non-LLM tool invocations, or for extra fees.
+
+**Q: How do I show the paywall UI?**\
+A: The `message` returned on `{ success: false }` contains everything the LLM needs to show (links & copy). **Don’t modify it.**
