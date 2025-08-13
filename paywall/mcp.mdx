@@ -1,7 +1,7 @@
 ---
 title: "MCP"
-description: "This guide shows how to charge users for MCP tools using the Paywalls.ai charging endpoint before executing the tool action.
-"
+description: "This guide shows how to charge users for MCP (Model Context Protocol) tools using the Paywalls.ai charging endpoint before executing the tool action. "
+icon: "waypoints"
 ---
 
 ## What you’ll build
@@ -183,7 +183,7 @@ await axios.post(
 ## Error handling patterns
 
 - **HTTP \!= success** → show a generic error and log `resp.status` \+ body.
-- **HTTP 200 \+ **`{ success: false, message }` → **return message verbatim** (it includes connect/top-up flows).
+- \*\*HTTP 200 \+ \*\*`{ success: false, message }` → **return message verbatim** (it includes connect/top-up flows).
 - **Timeouts** → don’t charge; return a transient error (or the verbatim message if charge timed out with a paywall link).
 - **Race conditions** → put a short **cooldown** on the same `(userId, toolKey, requestId)` pair to avoid duplicate processing.
 
@@ -204,7 +204,7 @@ PAYWALL_URL=https://api.paywalls.ai/v1/user/charge
 
 ## FAQ
 
-**Q: Can I charge _after_ the tool runs?**\
+**_Q: Can I charge after the tool runs?_**\
 A: Yes—use `/user/charge` again with the final amount, but we recommend **pre-charging** a minimum to avoid unpaid executions.
 
 **Q: Can I combine with the Chat Proxy?**\
