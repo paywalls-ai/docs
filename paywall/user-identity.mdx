@@ -16,9 +16,21 @@ Without knowing **which user** made a request, [Paywalls.ai](https://paywalls.ai
 
 Providing a user ID is **mandatory** for all billable endpoints (e.g., `/chat/completions`, `/user/charge`, etc.).
 
+## What is a user ID
+
+User ID can be any arbitrary string identifier, for example an internal ID from a database. [Paywalls.ai](http://Paywalls.ai) does not care about the content of the ID, as long as it is unique per user, and consistent between user sessions.
+
+<Note>
+  We don't recommend to use IDs that can identify a real person, for example emails or phone numbers, though it is not forbidden. Better to use randomized ID string, to reduce security and compliance risks.
+</Note>
+
 ## Identification Methods
 
 [Paywalls.ai](https://paywalls.ai) supports three ways to specify the user for maximum flexibility across clients, SDKs, and middleware.
+
+<Warning>
+  Avoid using spaces and special characters in the user ID.
+</Warning>
 
 ### Option 1: `user` field in the request body
 
