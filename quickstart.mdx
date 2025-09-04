@@ -54,6 +54,18 @@ console.log(completion.choices[0].message.content);
 3. **If authorized** → forwards the request to the LLM provider
 4. **Bills in real time** based on actual usage (tokens, per-request fees, or both)
 
+```mermaid
+flowchart TD
+    A(User) <-->| Chat messages | B(Your Application)
+    B <-->| Chat completion request | C(Paywalls proxy API) 
+    C --> D[If user has not authorized charges]
+    D -->|Paywalls Authorization message| B
+    C --> E[If user has not enough balance]
+    E -->|Paywalls Topup message| B
+    C --> F[If user has authorized charges and has enough balance]
+    F -->|Proxy request| G(LLM Provider)
+```
+
 ## 5. Billing Options
 
 You can configure each paywall or model to bill by:
