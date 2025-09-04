@@ -1,6 +1,6 @@
 ---
 title: "Payments"
-description: "Learn how users topup AI Wallet balance and approve charging."
+description: "Learn how users topup their account balance and authorize charging."
 icon: "hand-coins"
 ---
 
@@ -8,21 +8,21 @@ icon: "hand-coins"
 
 [Paywalls.ai](http://Paywalls.ai) uses a prepaid wallet model to control and monetize access to LLM APIs. Before a user can interact with your app through the proxy, they must:
 
-1. **Connect to the paywall** — granting permission to be charged.
-2. **Top up their balance** — by purchasing credits in their AI Wallet.
+1. **Authorize charging by the paywall** — granting permission to be charged.
+2. **Top up their balance** — by purchasing credits in their account.
 
-### Connecting to the Paywall
+### Authorizing the Paywall
 
-Users must explicitly approve billing before any charges are applied. This is handled through a **connect flow**:
+Users must explicitly authorize paywall before any charges are applied. This is handled through an **authorization flow**:
 
-- If the user is not connected, they’ll receive a response containing a `url` to the connection page.
-- Once connected, their ID will be associated with your paywall and you can begin charging them.
+- If the user is not authorized, they’ll receive a response containing a `url` to the authorization page.
+- Once authorized, their ID will be associated with your paywall and you can begin charging them.
 - You can optionally trigger the flow by calling the `/user/connect` endpoint.
 
 ### Topping Up Balance
 
 If a user’s balance is insufficient, the API will return a response containing a **top-up link** (via the `/chat/completions` or `/user/balance` endpoints):
 
-- The top-up process opens a hosted checkout page where users can purchase credit.
-- Credits are deposited directly into the user's **AI Wallet**.
+- The top-up process opens a user account page where users can purchase credit.
+- Credits are deposited directly into the user's **account.**
 - Once topped up, the proxy will allow usage to resume without interruptions.
