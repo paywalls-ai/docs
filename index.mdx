@@ -8,28 +8,36 @@ By routing prompts through the [Paywalls.ai](http://Paywalls.ai) proxy instead o
 
 ## How It Works
 
-1. **Proxy the request**\
-   You swap your LLM API base URL and key for Paywalls.ai’s:
+<Steps>
+<Step title="Proxy the request">
+You swap your LLM API base URL and key for Paywalls.ai’s:
 
-   ```python
-   client.api_base = "https://api.paywalls.ai/v1"
-   client.api_key = "sk-paywalls-xxxxxxxx"
-   ```
+```python
+client.api_base = "https://api.paywalls.ai/v1"
+client.api_key = "sk-paywalls-xxxxxxxx"
+```
 
-   The proxy receives the prompt instead of the inference provider.
-2. **Identify and authorize the user**\
-    The proxy identifies (and, if needed, authenticates) the user.\
-    It then requests a charge authorization—similar to a credit-card pre-authorization.
-3. **Handle failed authorizations**\
-    If the user’s balance is low or they are not connected:
-   - Show a paywall message, or
-   - Launch an AI-powered paywall agent that helps them top up via **your Stripe account** or **Paywalls.ai’s integrated payments**.
-4. **Forward the request**\
-    If authorization passes, the proxy forwards the prompt to the chosen inference provider.
-5. **Bill in real time**\
-    When the response returns:
-   - The proxy relays it instantly to your assistant/user (no added latency).
-   - In parallel, Paywalls.ai calculates the cost (based on provider, model, and tokens), applies your pricing rules, and records the charge.
+The proxy receives the prompt instead of the inference provider.
+</Step>
+<Step title="Identify and authorize the user">
+The proxy identifies (and, if needed, authenticates) the user.\
+
+It then requests a charge authorization—similar to a credit-card pre-authorization.
+</Step>
+<Step title="Handle failed authorizations">
+If the user’s balance is low or they are not connected:
+ - Show a paywall message, or
+ - Launch an AI-powered paywall agent that helps them top up via **your Stripe account** or **Paywalls.ai’s integrated payments**.
+</Step>
+<Step title="Forward the request">
+If authorization passes, the proxy forwards the prompt to the chosen inference provider.
+</Step>
+<Step title="Bill in real time">
+When the response returns:
+ - The proxy relays it instantly to your assistant/user (no added latency).
+ - In parallel, Paywalls.ai calculates the cost (based on provider, model, and tokens), applies your pricing rules, and records the charge.
+</Step>
+</Steps>
 
 ## Why a Proxy-Based Approach?
 
