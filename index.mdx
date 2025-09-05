@@ -8,10 +8,6 @@ Meet [Paywalls.ai](https://paywalls.ai): a programmable paywall and usage-based 
 
 <Info>
   Production API base URL: `https://api.paywalls.ai/v1`
-
-  <br />
-
-  OpenAPI spec: https://api.paywalls.ai/v1/openapi.yml
 </Info>
 
 ## Get started in minutes
@@ -34,7 +30,7 @@ Meet [Paywalls.ai](https://paywalls.ai): a programmable paywall and usage-based 
     });
     
     const res = await client.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: "openai/gpt-5",
     user: "user_123", // or use X-Paywall-User header
     messages: [{ role: "user", content: "Hello!" }],
     });
@@ -54,7 +50,7 @@ Meet [Paywalls.ai](https://paywalls.ai): a programmable paywall and usage-based 
     )
     
     resp = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="openai/gpt-5",
         user="user_123",  # or pass X-Paywall-User header
         messages=[{"role": "user", "content": "Hello!"}],
     )
@@ -72,7 +68,7 @@ Meet [Paywalls.ai](https://paywalls.ai): a programmable paywall and usage-based 
         "X-Paywall-User": "user_123",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "openai/gpt-5",
         messages: [{ role: "user", content: "Hello!" }],
       }),
     });
@@ -87,7 +83,7 @@ Meet [Paywalls.ai](https://paywalls.ai): a programmable paywall and usage-based 
       -H "Content-Type: application/json" \
       -H "X-Paywall-User: user_123" \
       -d '{
-        "model":"gpt-4o-mini",
+        "model":"openai/gpt-5",
         "messages":[{"role":"user","content":"Hello!"}]
       }'
     ```
