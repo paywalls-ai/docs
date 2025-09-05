@@ -33,3 +33,32 @@ Each request must specify the user:
 - If user is not authorized → returns an authorization link.
 - If user has no balance → returns a top-up link.
 - If both valid → deduct fee and forward to the model provider.
+
+---
+
+### Compatibility
+
+The Paywall Proxy supports most OpenAI-compatible endpoints and features. However, some limitations apply depending on the chosen model provider.
+
+#### Endpoints
+
+- Chat Completions: Supported (incl. streaming: `stream: true`)
+- Embeddings: Not supported yet (coming soon)
+- Images: Not supported yet (coming soon)
+- Audio: Not supported yet (coming soon)
+- Files / Assistants: Not supported yet (coming soon)
+
+#### Features
+
+- Tools / function calling: Supported; billed per prompt and output tokens
+- JSON mode / structured output: Supported; billed per prompt and output tokens
+- Vision inputs: Supported on compatible models
+- Logprobs / reasoning tokens: Not supported yet (coming soon)
+
+#### Model providers
+
+- OpenAI: Fully supported
+- Anthropic: Fully supported
+- OpenRouter: Fully supported
+- Other OpenAI-compatible providers: Fully supported
+- Custom non-OpenAI providers: Not supported yet (coming soon)
