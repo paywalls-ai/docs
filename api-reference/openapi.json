@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Paywalls.ai API",
-    "description": "The Paywalls.ai API enables developers to integrate monetization and access control for OpenAI-compatible LLMs.\n\nThis proxy service supports multiple pricing strategies—including per-request, token-based, and subscription models—while maintaining full compatibility with the OpenAI API format.\n\nRequests are automatically checked for user authorization and balance. If the user is not connected to the paywall, or lacks sufficient balance, the API will return actionable links for onboarding or top-up.\n\nUse this API to monetize your AI-powered apps and services with minimal effort.\n\nVisit [paywalls.ai](https://docs.paywalls.ai) for full documentation and setup guides.\n",
+    "description": "The Paywalls.ai API enables developers to integrate monetization and access control for OpenAI-compatible LLMs.\n\nThis proxy service supports multiple pricing strategies—including per-request, token-based, and subscription models—while maintaining full compatibility with the OpenAI API format.\n\nRequests are automatically checked for user authorization and balance. If the user has not authorized the paywall, or lacks sufficient balance, the API will return actionable links for authorization or top-up.\n\nUse this API to monetize your AI-powered apps and services with minimal effort.\n\nVisit [paywalls.ai](https://docs.paywalls.ai) for full documentation and setup guides.\n",
     "version": "1.0.0"
   },
   "servers": [
@@ -19,7 +19,7 @@
   "tags": [
     {
       "name": "Chat",
-      "description": "OpenAI-compatible chat completion endpoint that enforces paywall logic before proxying the request to a model provider.\n\nAutomatically checks user connection, balance, and performs charging. Supports streaming and non-streaming completions.\n"
+      "description": "OpenAI-compatible chat completion endpoint that enforces paywall logic before proxying the request to a model provider.\n\nAutomatically checks user authorization, balance, and performs charging. Supports streaming and non-streaming completions.\n"
     },
     {
       "name": "Models",
@@ -27,14 +27,14 @@
     },
     {
       "name": "User",
-      "description": "Endpoints for managing user sessions, balance, and charging status.\n\nIncludes functionality for connecting to or disconnecting from the paywall, checking balance, initiating top-ups, and issuing manual charges.\n"
+      "description": "Endpoints for managing user sessions, balance, and charging status.\n\nIncludes functionality for user authorization, checking balance, initiating top-ups, and issuing manual charges.\n"
     }
   ],
   "paths": {
     "/chat/completions": {
       "post": {
         "summary": "Proxy a chat completion request with automatic paywall enforcement",
-        "description": "This endpoint proxies an OpenAI-compatible chat completion request and charges the user based on the configured monetization model (per request, per token, etc).\n\nIf the user is not connected to the paywall, the response will contain a connection link.\n\nIf the user is connected but has insufficient balance, a top-up link is returned.\n\nOn success, the request is forwarded to the underlying model provider and the result is returned.\n",
+        "description": "This endpoint proxies an OpenAI-compatible chat completion request and charges the user based on the configured monetization model (per request, per token, etc).\n\nIf the user has not authorized the paywall, the response will contain an authorization link.\n\nIf the user has authorized, but has insufficient balance, a top-up link is returned.\n\nOn success, the request is forwarded to the underlying model provider and the result is returned.\n",
         "tags": ["Chat"],
         "parameters": [
           {
@@ -262,7 +262,7 @@
     "/user/charge": {
       "post": {
         "summary": "Manually charge a user for a specific amount",
-        "description": "Charges a specific user an arbitrary amount (in USDC equivalent), if the user is connected and has sufficient balance.\n\nThis can be used for non-standard billing scenarios such as one-time feature unlocks or external usage tracking.\n",
+        "description": "Charges a specific user an arbitrary amount (in USDC equivalent), if the user has authorized charges and has sufficient balance.\n\nThis can be used for non-standard billing scenarios such as one-time feature unlocks or external usage tracking.\n",
         "tags": ["User"],
         "parameters": [
           {
@@ -314,8 +314,8 @@
     },
     "/user/connect": {
       "get": {
-        "summary": "Check user connection status to the paywall",
-        "description": "Checks whether a user is currently connected (i.e., has authorized charging).\n\nIf not connected, a `url` field will be returned to redirect the user to the connection flow (e.g., a consent or wallet approval page).\n",
+        "summary": "Check user authorization status",
+        "description": "Checks whether a user has authorized charging.\n\nIf not authorized, a `url` field will be returned to redirect the user to the authorization flow.\n",
         "tags": ["User"],
         "parameters": [
           {
@@ -333,7 +333,7 @@
         ],
         "responses": {
           "200": {
-            "description": "User is connected to the paywall.",
+            "description": "User has authorized the paywall.",
             "content": {
               "application/json": {
                 "schema": {
@@ -355,7 +355,7 @@
     "/user/disconnect": {
       "get": {
         "summary": "Disconnect the user from the paywall",
-        "description": "Revokes the user’s charging authorization and disconnects them from the paywall.\n\nAfter this, any charge or request requiring payment will return a connection link instead of proceeding.\n",
+        "description": "Revokes the user’s charging authorization and disconnects them from the paywall.\n\nAfter this, any charge or request requiring payment will return an authorization link instead of proceeding.\n",
         "tags": ["User"],
         "parameters": [
           {
@@ -398,7 +398,7 @@
     "/user/menu": {
       "get": {
         "summary": "Get paywall menu items for the user",
-        "description": "Returns a list of menu items relevant to the user based on their connection status and balance.\n\nThis can include links to top-up, activity history, and wallet management.\n\nUseful for building user interfaces that need to display actionable items based on the user's paywall state.\n",
+        "description": "Returns a list of menu items relevant to the user based on their authorization status and balance.\n\nThis can include links to top-up, activity history, and account management.\n\nUseful for building user interfaces that need to display actionable items based on the user's paywall state.\n",
         "tags": ["User"],
         "parameters": [
           {
@@ -432,7 +432,7 @@
                     },
                     "wallet": {
                       "type": "string",
-                      "description": "URL to the wallet page for the user."
+                      "description": "URL to the account page for the user."
                     }
                   }
                 }
@@ -458,11 +458,11 @@
     "schemas": {
       "ConnectedUser": {
         "type": "object",
-        "description": "Information about a user who has successfully connected to a paywall.\nIncludes internal and external user identifiers and the associated paywall key.\n",
+        "description": "Information about a user who has successfully authorized a paywall to charge them.\nIncludes internal and external user identifiers and the associated paywall key.\n",
         "properties": {
           "paywallKeyId": {
             "type": "string",
-            "description": "Unique identifier of the paywall configuration the user is connected to."
+            "description": "Unique identifier of the paywall configuration the user has authorized."
           },
           "userId": {
             "type": "string",
@@ -475,7 +475,7 @@
           "createdAt": {
             "type": "string",
             "format": "date-time",
-            "description": "ISO 8601 timestamp indicating when the user was connected to the paywall."
+            "description": "ISO 8601 timestamp indicating when the user was authorized charges."
           }
         }
       },
@@ -562,7 +562,7 @@
           },
           "message": {
             "type": "string",
-            "description": "Human-readable message confirming the connection status."
+            "description": "Human-readable message confirming the authorization status."
           }
         },
         "example": {
@@ -578,7 +578,7 @@
       },
       "UserNotConnectedResponse": {
         "type": "object",
-        "description": "Response structure when the user is not connected to the paywall.\nA connection link is provided so the user can authorize charges.\n",
+        "description": "Response structure when the user has not authorized the paywall.\nAn authorization link is provided so the user can authorize charges.\n",
         "properties": {
           "connected": {
             "type": "boolean",
@@ -586,7 +586,7 @@
           },
           "message": {
             "type": "string",
-            "description": "Human-readable message explaining the user is not connected."
+            "description": "Human-readable message explaining the user is not authorized."
           },
           "url": {
             "type": "string",
@@ -595,7 +595,7 @@
         },
         "example": {
           "connected": false,
-          "message": "User is not connected to the paywall.",
+          "message": "User is not authorized to the paywall.",
           "url": "https://paywalls.ai/connect?..."
         }
       }

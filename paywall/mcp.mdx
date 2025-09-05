@@ -8,7 +8,7 @@ icon: "waypoints"
 
 - A **pre-charge hook** that runs before each MCP tool call.
 - If charge succeeds → run the tool.
-- If charge fails (not connected / low balance) → **return the paywall message verbatim** so the LLM can show the user a connect/top-up link.
+- If charge fails (not authorized / low balance) → **return the paywall message verbatim** so the LLM can show the user an authorization/top-up link.
 - All without changing your MCP tool logic.
 
 ## High-level flow
@@ -17,7 +17,7 @@ icon: "waypoints"
 2. **Call Paywalls charge endpoint** with `user` and `amount`.
 3. **Handle response**:
    - `{ success: true }` → proceed to call the MCP tool.
-   - `{ success: false, message }` → return a message that **must be shown verbatim** to the user (it contains connect/top-up links and instructions).
+   - `{ success: false, message }` → return a message that **must be shown verbatim** to the user (it contains authorization/top-up links and instructions).
 4. **Execute tool** and return the result.
 
 ## Core charge snippet (drop-in)
@@ -33,16 +33,25 @@ server.registerTool(
     inputSchema: {
       appSlug: z.string({ description: 'App slug (from "queryTool").' }),
       toolKey: z.string({ description: 'Tool key (from "queryTool").' }),
-      instruction: z.string({ description: "Detailed instructions for the tool." }),
+      instruction: z.string({
+        description: "Detailed instructions for the tool.",
+      }),
     },
   },
   async ({ appSlug, toolKey, instruction }, { authInfo, requestId }) => {
-    console.log(`[${authInfo?.extra?.userId}][${requestId}][S][call][${appSlug}/${toolKey}] ${instruction}`);
+    console.log(
+      `[${authInfo?.extra?.userId}][${requestId}][S][call][${appSlug}/${toolKey}] ${instruction}`
+    );
 
     if (PAYWALL_KEY) {
       if (!authInfo?.extra?.userId) {
         return {
-          content: [{ type: "text", text: "You need to be logged in to use this tool. Please reconnect MCP in your LLM app." }],
+          content: [
+            {
+              type: "text",
+              text: "You need to be logged in to use this tool. Please reconnect MCP in your LLM app.",
+            },
+          ],
         };
       }
 
@@ -56,8 +65,20 @@ server.registerTool(
         .catch((e) => (isAxiosError(e) ? e.response : e));
 
       if (resp?.status !== 200) {
-        console.log(`[${authInfo?.extra?.userId}][${requestId}] Paywall error ${resp?.status || "<unknown>"}`, resp?.data || resp);
-        return { content: [{ type: "text", text: "Sorry, there was an error processing your request." }] };
+        console.log(
+          `[${authInfo?.extra?.userId}][${requestId}] Paywall error ${
+            resp?.status || "<unknown>"
+          }`,
+          resp?.data || resp
+        );
+        return {
+          content: [
+            {
+              type: "text",
+              text: "Sorry, there was an error processing your request.",
+            },
+          ],
+        };
       }
 
       const { success, message } = resp.data;
@@ -67,7 +88,7 @@ server.registerTool(
           content: [
             {
               type: "text",
-              // 👇 IMPORTANT: show message verbatim (contains connect/top-up UI)
+              // 👇 IMPORTANT: show message verbatim (contains authorization/top-up UI)
               text: `User needs to perform additional actions. Show these instructions verbatim:\n\n${message}`,
             },
           ],
@@ -76,15 +97,28 @@ server.registerTool(
     }
 
     // ✅ Charge passed — execute the tool
-    const client = await createClient({ userId: authInfo!.extra!.userId as string, appSlug });
+    const client = await createClient({
+      userId: authInfo!.extra!.userId as string,
+      appSlug,
+    });
     try {
-      const result = await client.callTool({ name: toolKey, arguments: { instruction } });
-      console.log(`[${authInfo?.extra?.userId}][${requestId}][R] ${result.content?.[0].text || "<unknown>"}`);
+      const result = await client.callTool({
+        name: toolKey,
+        arguments: { instruction },
+      });
+      console.log(
+        `[${authInfo?.extra?.userId}][${requestId}][R] ${
+          result.content?.[0].text || "<unknown>"
+        }`
+      );
       client.close().catch(() => {});
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return result as any;
     } catch (e) {
-      console.log(`[${authInfo?.extra?.userId}][${requestId}][E] ${String(e)}`, e);
+      console.log(
+        `[${authInfo?.extra?.userId}][${requestId}][E] ${String(e)}`,
+        e
+      );
       throw e;
     }
   }
@@ -95,7 +129,7 @@ server.registerTool(
 
 - `amount` is a string (e.g., `"0.001"`). Use **flat fee** or compute dynamically (see “Pricing strategies” below).
 - Paywalls API returns HTTP **200** both for success and for paywall-required flows; check the `success` boolean.
-- The `message` string is **ready to show** to the end user (contains connect/top-up links).
+- The `message` string is **ready to show** to the end user (contains authorization/top-up links).
 
 ## User identity in MCP
 
@@ -183,7 +217,7 @@ await axios.post(
 ## Error handling patterns
 
 - **HTTP \!= success** → show a generic error and log `resp.status` \+ body.
-- \*\*HTTP 200 \+ \*\*`{ success: false, message }` → **return message verbatim** (it includes connect/top-up flows).
+- \*\*HTTP 200 \+ \*\*`{ success: false, message }` → **return message verbatim** (it includes authorization/top-up flows).
 - **Timeouts** → don’t charge; return a transient error (or the verbatim message if charge timed out with a paywall link).
 - **Race conditions** → put a short **cooldown** on the same `(userId, toolKey, requestId)` pair to avoid duplicate processing.
 
@@ -198,7 +232,7 @@ PAYWALL_URL=https://api.paywalls.ai/v1/user/charge
 
 - Use a **fake user ID** like `user_local_123`.
 - Start with a small amount, e.g. `"0.0001"`.
-- Trigger **not connected** → verify the MCP returns the message verbatim.
+- Trigger **not authorized** → verify the MCP returns the message verbatim.
 - Trigger **low balance** → verify top-up path.
 - Trigger **success** → ensure your tool executes post-charge.
 

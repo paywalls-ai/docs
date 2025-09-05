@@ -8,9 +8,7 @@ icon: "rocket"
 [Paywalls.ai](http://Paywalls.ai) is a **programmable paywall and usage-based billing proxy** for OpenAI-compatible APIs.\
 It lets you monetize any LLM without changing your frontend code — simply route your API requests through [Paywalls.ai](http://Paywalls.ai) instead of calling the model provider directly.
 
-<Info>
-  **OpenAPI spec:** https://api.paywalls.ai/v1/openapi.yml
-</Info>
+<Info>**OpenAPI spec:** https://api.paywalls.ai/v1/openapi.yml</Info>
 
 ## 2. Create Your Account & API Key
 
@@ -29,27 +27,29 @@ import OpenAI from "openai";
 
 const client = new OpenAI({
   apiKey: "sk-paywalls-xxxxxxxx",
-  baseURL: "https://api.paywalls.ai/v1"
+  baseURL: "https://api.paywalls.ai/v1",
 });
 
 const completion = await client.chat.completions.create({
   model: "gpt-3.5-turbo",
   messages: [{ role: "user", content: "Hello world" }],
-  user: "user_123" // or pass via X-Paywall-User header
+  user: "user_123", // or pass via X-Paywall-User header
 });
 
 console.log(completion.choices[0].message.content);
 ```
 
 <Note>
-  **Note:** You can pass the user ID in the request body (`user` property) or in an `X-Paywall-User` header. [Learn more about User Identification](/paywall/user-identity).
+  **Note:** You can pass the user ID in the request body (`user` property) or in
+  an `X-Paywall-User` header. [Learn more about User
+  Identification](/paywall/user-identity).
 </Note>
 
 ## 4. How It Works (In Short)
 
 1. **Proxy receives your request**\
-   Identifies the user and checks their paywall connection and balance.
-2. **If not connected** → returns a `connect` link\
+   Identifies the user and checks their paywall authorization and balance.
+2. **If not authorized** → returns an `authorization` link\
    **If balance too low** → returns a `topup` link
 3. **If authorized** → forwards the request to the LLM provider
 4. **Bills in real time** based on actual usage (tokens, per-request fees, or both)
@@ -57,7 +57,7 @@ console.log(completion.choices[0].message.content);
 ```mermaid
 flowchart TD
     A(User) <-->| Chat messages | B(Your Application)
-    B <-->| Chat completion request | C(Paywalls proxy API) 
+    B <-->| Chat completion request | C(Paywalls proxy API)
     C --> D[If user has not authorized charges]
     D -->|Paywalls Authorization message| B
     C --> E[If user has not enough balance]

@@ -18,14 +18,16 @@ client.api_key = "sk-paywalls-xxxxxxxx"
 ```
 
 The proxy receives the prompt instead of the inference provider.
+
 </Step>
 <Step title="Identify and authorize the user">
 The proxy identifies (and, if needed, authenticates) the user.\
 
 It then requests a charge authorization—similar to a credit-card pre-authorization.
+
 </Step>
 <Step title="Handle failed authorizations">
-If the user’s balance is low or they are not connected:
+If the user’s balance is low or they are not authorized charges:
  - Show a paywall message, or
  - Launch an AI-powered paywall agent that helps them top up via **your Stripe account** or **Paywalls.ai’s integrated payments**.
 </Step>
@@ -65,4 +67,3 @@ When the response returns:
 - **Frictionless onboarding**: Users start instantly—no wallet setup, no registration.
 - **AI-powered selling**: Natural language paywall interactions instead of static checkout forms.
 - **Deploy anywhere**: Launch on Telegram, Slack, ChatGPT, Claude—any platform.
-

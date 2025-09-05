@@ -4,13 +4,13 @@ description: "To process billing and enforce access control, every request to Pa
 icon: "circle-user"
 ---
 
-This identity allows the paywall to track usage, apply charges, and enforce connection/balance rules.
+This identity allows the paywall to track usage, apply charges, and enforce authorization/balance rules.
 
 ## Why it matters
 
 Without knowing **which user** made a request, [Paywalls.ai](https://paywalls.ai) cannot:
 
-- Verify whether they are **connected** to your paywall
+- Verify whether they have **authorized** your paywall to charge them
 - Check if they have **enough balance**
 - Associate charges and usage records with them
 
@@ -21,16 +21,16 @@ Providing a user ID is **mandatory** for all billable endpoints (e.g., `/chat/co
 User ID can be any arbitrary string identifier, for example an internal ID from a database. [Paywalls.ai](http://Paywalls.ai) does not care about the content of the ID, as long as it is unique per user, and consistent between user sessions.
 
 <Note>
-  We don't recommend to use IDs that can identify a real person, for example emails or phone numbers, though it is not forbidden. Better to use randomized ID string, to reduce security and compliance risks.
+  We don't recommend to use IDs that can identify a real person, for example
+  emails or phone numbers, though it is not forbidden. Better to use randomized
+  ID string, to reduce security and compliance risks.
 </Note>
 
 ## Identification Methods
 
 [Paywalls.ai](https://paywalls.ai) supports three ways to specify the user for maximum flexibility across clients, SDKs, and middleware.
 
-<Warning>
-  Avoid using spaces and special characters in the user ID.
-</Warning>
+<Warning>Avoid using spaces and special characters in the user ID.</Warning>
 
 ### Option 1: `user` field in the request body
 
@@ -85,8 +85,8 @@ Content-Type: application/json
 ```
 
 <Info>
-  **Note:** This format is less standard and may require additional routing logic.\
-  Use only when the first two options are not possible.
+  **Note:** This format is less standard and may require additional routing
+  logic.\ Use only when the first two options are not possible.
 </Info>
 
 ## Behavior on Requests
@@ -97,14 +97,14 @@ Once a request is received:
    - `user` field in body → highest priority
    - `X-Paywall-User` header → fallback
    - URL path parameter → last resort
-2. **Connection check**:
-   - If the user is **not connected** → response includes `{ connected: false, connect_link: "..." }`
+2. **Authorization check**:
+   - If the user is **not authorized** → response includes `{ connected: false, connect_link: "..." }`
    - No charge is applied.
 3. **Balance check**:
-   - If **connected but no balance** → response includes `{ connected: true, balance: 0, topup_link: "..." }`
+   - If **authorized but no balance** → response includes `{ connected: true, balance: 0, topup_link: "..." }`
    - No charge is applied.
 4. **Billing & forwarding**:
-   - If connected and funded →\
+   - If authorized and funded →\
      a. Cost is calculated\
      b. Balance is deducted\
      c. Request is forwarded to the provider\
@@ -112,7 +112,7 @@ Once a request is received:
 
 ## Best Practices
 
-- \*\*Always use Option 1 (body \*\*`user`**field)**  if possible — it's OpenAI-spec compatible and future-proof.
+- \*\*Always use Option 1 (body \*\*`user`**field)** if possible — it's OpenAI-spec compatible and future-proof.
 - Ensure user IDs are **unique per end-user** but **consistent** across requests for accurate billing.
 - Avoid exposing sensitive personal information as `user` values — use internal IDs instead.
 - If using Option 2 or 3, confirm your client or middleware passes the user ID on **every** request.
@@ -154,7 +154,9 @@ const stream = await client.chat.completions.create({
   model: "gpt-4o-mini",
   user: "user_123",
   stream: true,
-  messages: [{ role: "user", content: "Explain usage-based pricing in 2 lines." }],
+  messages: [
+    { role: "user", content: "Explain usage-based pricing in 2 lines." },
+  ],
 });
 
 for await (const chunk of stream) {
@@ -277,13 +279,13 @@ fetch (header)
 const r = await fetch("https://api.paywalls.ai/v1/chat/completions", {
   method: "POST",
   headers: {
-    "Authorization": `Bearer ${process.env.PAYWALLS_API_KEY}`,
+    Authorization: `Bearer ${process.env.PAYWALLS_API_KEY}`,
     "Content-Type": "application/json",
     "X-Paywall-User": "user_123", // 👈 header identity
   },
   body: JSON.stringify({
     model: "gpt-3.5-turbo",
-    messages: [{ role: "user", content: "Hello!" }]
+    messages: [{ role: "user", content: "Hello!" }],
   }),
 });
 const json = await r.json();

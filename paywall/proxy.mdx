@@ -26,10 +26,10 @@ Each request must specify the user:
 
 - Option 1: `user` field in the request body (recommended for OpenAI-compatible clients)
 - Option 2: `X-Paywall-User` header (recommended for middleware injection)
-- Option 3: `user` URL path parameter, e.g. `https://api.paywalls.ai/v1/{user}`  (when no other option works)
+- Option 3: `user` URL path parameter, e.g. `https://api.paywalls.ai/v1/{user}` (when no other option works)
 
 ### Behavior
 
-- If user is not connected → returns a connect link.
+- If user is not authorized → returns an authorization link.
 - If user has no balance → returns a top-up link.
 - If both valid → deduct fee and forward to the model provider.

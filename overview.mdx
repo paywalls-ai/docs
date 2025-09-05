@@ -9,7 +9,7 @@ It enables developers to monetize LLM usage without modifying client-side integr
 
 By sitting between your app and the inference provider, the Paywalls.ai proxy:
 
-- **Validates** the user’s connection and balance
+- **Validates** the user’s authorization and balance
 - **Calculates** the cost of each request in real time
 - **Applies** your pricing rules
 - **Charges** the user before forwarding the request
@@ -34,8 +34,8 @@ When you register and generate an API key, you configure:
 - Add pricing for custom models
 
 <Note>
-  **Each API key is tied to a single provider**\
-  However, every request can target any model that provider supports, with dynamic pricing per model.
+  **Each API key is tied to a single provider**\ However, every request can
+  target any model that provider supports, with dynamic pricing per model.
 </Note>
 
 ## Revenue & Payment Distribution
@@ -101,10 +101,10 @@ For each paid request, user spend is split into three parts:
 | :--------------------------------------- | :----------------------------------------------------------------------------------------------------------------------- |
 | **Proxy Endpoint** (`/chat/completions`) | Handles LLM chat requests. Enforces paywall rules and proxies to OpenAI-compatible model providers.                      |
 | **Model Registry** (`/models`)           | Lists supported models and their pricing (per-token and per-request).                                                    |
-| **User Endpoints** (`/user/*`)           | Tools to manage paywall connection, top-up, balance lookup, and manual charges.                                          |
+| **User Endpoints** (`/user/*`)           | Tools to manage paywall authorization, top-up, balance lookup, and manual charges.                                       |
 | **Pricing Engine**                       | Calculates the usage cost based on your configured model rates and request parameters (tokens, request flat fees, etc.). |
 | **Metering System**                      | Measures prompt and completion token usage (if token-based billing is enabled).                                          |
-| **Connection Logic**                     | Ensures only connected (authorized) users can be charged. Returns a connect link if not connected.                       |
+| **Authorization Logic**                  | Ensures only authorized users can be charged. Returns an authorization link if not authorized.                           |
 | **Top-Up System**                        | Returns a top-up link when balance is low, blocking access until funds are added.                                        |
 
 ## Request Lifecycle
@@ -112,10 +112,10 @@ For each paid request, user spend is split into three parts:
 1. **Request sent to the proxy** → Your app calls `https://api.paywalls.ai/v1/chat/completions`
 2. **Authentication** → `Authorization: Bearer ...` API key identifies your paywall
 3. **User identification** → Pass `user` in body or `X-Paywall-User` header
-4. **Connection & balance check**
-   - Not connected → return `connect` link
+4. **Authorization & balance check**
+   - Not authorized → return `authorize` link
    - Low balance → return `topup` link
-   - Connected \+ funded → proceed
+   - Authorized \+ funded → proceed
 5. **Cost computation** → Request fee \+ token costs
 6. **Charge execution** → Deduct balance, record charge
 7. **Forward request** → To chosen LLM provider

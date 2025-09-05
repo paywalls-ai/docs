@@ -18,11 +18,7 @@
         "groups": [
           {
             "group": "Getting started",
-            "pages": [
-              "index",
-              "quickstart",
-              "overview"
-            ]
+            "pages": ["index", "quickstart", "overview"]
           },
           {
             "group": "Paywall",
@@ -43,21 +39,15 @@
         "groups": [
           {
             "group": "API documentation",
-            "pages": [
-              "api-reference/introduction"
-            ]
+            "pages": ["api-reference/introduction"]
           },
           {
             "group": "Chat completion",
-            "pages": [
-              "api-reference/chat/completions/post"
-            ]
+            "pages": ["api-reference/chat/completions/post"]
           },
           {
             "group": "Models",
-            "pages": [
-              "api-reference/models/get"
-            ]
+            "pages": ["api-reference/models/get"]
           },
           {
             "group": "User",
@@ -81,7 +71,7 @@
           "icon": "globe"
         },
         {
-          "anchor": "AI Wallet",
+          "anchor": "Account",
           "href": "https://wallet.paywalls.ai",
           "icon": "wallet"
         }
