@@ -4,11 +4,11 @@ description: "Learn about Proxy API settings."
 icon: "chevrons-left-right-ellipsis"
 ---
 
-### Overview
+## Overview
 
 The Paywall Proxy sits between your backend and the actual LLM API provider (e.g., OpenAI, Anthropic or OpenRouter). It enforces billing, usage limits, and authentication — while preserving OpenAI API compatibility.
 
-### Endpoint
+## Endpoint
 
 Replace OpenAI’s endpoint with:
 
@@ -16,11 +16,11 @@ Replace OpenAI’s endpoint with:
 https://api.paywalls.ai/v1
 ```
 
-### Authentication
+## Authentication
 
 Use the `Authorization: Bearer YOUR_API_KEY` header to authenticate your app (not the user).
 
-### User Identification
+## User Identification
 
 Each request must specify the user:
 
@@ -28,7 +28,7 @@ Each request must specify the user:
 - Option 2: `X-Paywall-User` header (recommended for middleware injection)
 - Option 3: `user` URL path parameter, e.g. `https://api.paywalls.ai/v1/{user}` (when no other option works)
 
-### Behavior
+## Behavior
 
 - If user is not authorized → returns an authorization link.
 - If user has no balance → returns a top-up link.
@@ -36,11 +36,11 @@ Each request must specify the user:
 
 ---
 
-### Compatibility
+## Compatibility
 
 The Paywall Proxy supports most OpenAI-compatible endpoints and features. However, some limitations apply depending on the chosen model provider.
 
-#### Endpoints
+### Endpoints
 
 - Chat Completions: Supported (incl. streaming: `stream: true`)
 - Embeddings: Not supported yet (coming soon)
@@ -48,14 +48,14 @@ The Paywall Proxy supports most OpenAI-compatible endpoints and features. Howeve
 - Audio: Not supported yet (coming soon)
 - Files / Assistants: Not supported yet (coming soon)
 
-#### Features
+### Features
 
 - Tools / function calling: Supported; billed per prompt and output tokens
 - JSON mode / structured output: Supported; billed per prompt and output tokens
 - Vision inputs: Supported on compatible models
 - Logprobs / reasoning tokens: Not supported yet (coming soon)
 
-#### Model providers
+### Model providers
 
 - OpenAI: Fully supported
 - Anthropic: Fully supported
