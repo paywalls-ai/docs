@@ -1,69 +1,155 @@
 ---
 title: "Introduction"
-description: "Paywalls.ai is a no-code, real-time proxy that sits between AI assistants and inference providers.  It meters usage, applies dynamic pricing, and handles payments—so developers can monetize any model, anywhere, with guaranteed margins."
+description: "Paywalls.ai is a real-time proxy that meters usage, applies dynamic pricing, and handles payments—so you can monetize any OpenAI‑compatible model with minimal changes."
 icon: "book-open"
 ---
 
-By routing prompts through the [Paywalls.ai](http://Paywalls.ai) proxy instead of sending them directly to an inference provider, you can add **automatic pricing rules, “paywalls,” and user charges** without writing complex billing code.
+Meet [Paywalls.ai](https://paywalls.ai): a programmable paywall and usage-based billing proxy for OpenAI-compatible APIs. Route your requests through the proxy to add pricing rules, authorization, and real-time charging—without rebuilding billing or metering.
 
-## How It Works
+<Info>
+  Production API base URL: `https://api.paywalls.ai/v1`
+
+  <br />
+
+  OpenAPI spec: https://api.paywalls.ai/v1/openapi.yml
+</Info>
+
+## Get started in minutes
 
 <Steps>
-<Step title="Proxy the request">
-You swap your LLM API base URL and key for Paywalls.ai’s:
+  <Step title="Create an API key">
+    Sign up and create a paywall in the [Dashboard](https://dashboard.paywalls.ai). Copy the secret API key.
+  </Step>
+  <Step title="Point your client to the proxy">
+    Replace your OpenAI base URL and key with Paywalls.ai.
 
-```python
-client.api_base = "https://api.paywalls.ai/v1"
-client.api_key = "sk-paywalls-xxxxxxxx"
-```
+    <CodeGroup>
 
-The proxy receives the prompt instead of the inference provider.
+    ```javascript Node.js
+    import OpenAI from "openai";
+    
+    const client = new OpenAI({
+    apiKey: process.env.PAYWALLS_API_KEY, // sk-paywalls-...
+    baseURL: "https://api.paywalls.ai/v1",
+    });
+    
+    const res = await client.chat.completions.create({
+    model: "gpt-4o-mini",
+    user: "user_123", // or use X-Paywall-User header
+    messages: [{ role: "user", content: "Hello!" }],
+    });
+    
+    console.log(res.choices[0]?.message?.content);
+    
+    ```
 
-</Step>
-<Step title="Identify and authorize the user">
-The proxy identifies (and, if needed, authenticates) the user.\
+    
+    ```python Python
+    from openai import OpenAI
+    import os
+    
+    client = OpenAI(
+        api_key=os.environ["PAYWALLS_API_KEY"],  # sk-paywalls-...
+        base_url="https://api.paywalls.ai/v1",
+    )
+    
+    resp = client.chat.completions.create(
+        model="gpt-4o-mini",
+        user="user_123",  # or pass X-Paywall-User header
+        messages=[{"role": "user", "content": "Hello!"}],
+    )
+    
+    print(resp.choices[0].message.content)
+    ```
 
-It then requests a charge authorization—similar to a credit-card pre-authorization.
+    
+    ```javascript JavaScript (fetch)
+    const res = await fetch("https://api.paywalls.ai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.PAYWALLS_API_KEY}`,
+        "Content-Type": "application/json",
+        "X-Paywall-User": "user_123",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: "Hello!" }],
+      }),
+    });
+    const data = await res.json();
+    console.log(data.choices?.[0]?.message?.content);
+    ```
 
-</Step>
-<Step title="Handle failed authorizations">
-If the user’s balance is low or they are not authorized charges:
- - Show a paywall message, or
- - Launch an AI-powered paywall agent that helps them top up via **your Stripe account** or **Paywalls.ai’s integrated payments**.
-</Step>
-<Step title="Forward the request">
-If authorization passes, the proxy forwards the prompt to the chosen inference provider.
-</Step>
-<Step title="Bill in real time">
-When the response returns:
- - The proxy relays it instantly to your assistant/user (no added latency).
- - In parallel, Paywalls.ai calculates the cost (based on provider, model, and tokens), applies your pricing rules, and records the charge.
-</Step>
+    
+    ```bash cURL
+    curl https://api.paywalls.ai/v1/chat/completions \
+      -H "Authorization: Bearer $PAYWALLS_API_KEY" \
+      -H "Content-Type: application/json" \
+      -H "X-Paywall-User: user_123" \
+      -d '{
+        "model":"gpt-4o-mini",
+        "messages":[{"role":"user","content":"Hello!"}]
+      }'
+    ```
+
+    </CodeGroup>
+  </Step>
+  <Step title="Identify the user on every request">
+    Pass a stable user ID via request body (`user`) or header (`X-Paywall-User`).
+
+    This enables authorization and billing.
+
+    <Note>
+      Learn more: [User Identity](/paywall/user-identity)
+    </Note>
+  </Step>
+  <Step title="Handle paywall responses">
+    - Not authorized → you’ll get an authorization URL
+    - Low balance → you’ll get a top-up URL
+    - Authorized \+ funded → request is billed and proxied to the model
+  </Step>
 </Steps>
 
-## Why a Proxy-Based Approach?
+## Why Paywalls.ai
 
-- **Dynamic model switching** – Let users choose models at runtime while keeping every request profitable.
-- **Real-time cost control** – Prices calculated on the fly, not guessed in advance.
-- **Platform agnostic** – Works with any model, provider, or deployment platform.
+- Drop-in OpenAI compatibility (no SDK lock-in)
+- Real-time cost control and guaranteed margins
+- Works with any stack: code and no-code
+- Monetize anywhere: frontends, backends, agents, and MCP tools
 
-## Supported Ecosystem
+## What happens on each request
 
-| **LLMs**                              | **Build Tools**                                                     | **Client Platforms**                         |
-| :------------------------------------ | :------------------------------------------------------------------ | :------------------------------------------- |
-| OpenAI, Anthropic, DeepSeek, Mistral… | Zapier, FlowXO, n8n, Flowise, LangChain, [Crew.ai](http://Crew.ai)… | Telegram, WhatsApp, Messenger, XMTP, Signal… |
+1. Authenticate your paywall via Bearer API key
+2. Extract user ID (body, header, or URL)
+3. Check authorization and balance; return actionable links if needed
+4. Compute and charge per your pricing rules (per-request and/or per-token)
+5. Forward to the provider and stream results back
 
-## All-in-One, Ready-to-Go
+## Explore next
 
-✅ Meter every prompt and user\
-✅ Bill users for usage\
-✅ Block access when you want\
-➕ Integrated top-up (or use your own Stripe)
-
-## Fast to Implement
-
-- **Code or no-code**: Works with any framework or tool.
-- **Usage-based pricing**: Automatically bill based on actual token usage, not estimates.
-- **Frictionless onboarding**: Users start instantly—no wallet setup, no registration.
-- **AI-powered selling**: Natural language paywall interactions instead of static checkout forms.
-- **Deploy anywhere**: Launch on Telegram, Slack, ChatGPT, Claude—any platform.
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    First proxy request and common patterns.
+  </Card>
+  <Card title="Overview" icon="table-of-contents" href="/overview">
+    Architecture, flows, and core components.
+  </Card>
+  <Card title="User Identity" icon="circle-user" href="/paywall/user-identity">
+    How to pass user IDs (body, header, URL).
+  </Card>
+  <Card title="Proxy" icon="chevrons-left-right-ellipsis" href="/paywall/proxy">
+    Endpoint, auth, and runtime behavior.
+  </Card>
+  <Card title="Payments" icon="hand-coins" href="/paywall/payments">
+    Authorization and top-up flows.
+  </Card>
+  <Card title="Billing" icon="circle-dollar-sign" href="/paywall/billing">
+    Pricing rules, metering, and charging.
+  </Card>
+  <Card title="Configuration" icon="cog" href="/paywall/configuration">
+    Set up rules, limits, and defaults.
+  </Card>
+  <Card title="API Reference" icon="book" href="/api-reference/introduction">
+    Endpoints, schemas, and examples.
+  </Card>
+</CardGroup>
