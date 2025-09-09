@@ -31,6 +31,13 @@
               "paywall/configuration",
               "paywall/mcp"
             ]
+          },
+          {
+            "group": "Payments",
+            "pages": [
+              "payments/paywalls",
+              "payments/stripe"
+            ]
           }
         ]
       },

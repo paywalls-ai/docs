@@ -1,0 +1,29 @@
+---
+title: "Paywalls.ai"
+description: "Prepaid wallet with fiat and crypto payments."
+---
+
+### Overview
+
+[Paywalls.ai](http://Paywalls.ai) by default uses a prepaid wallet model to control and monetize access to LLM APIs. Before a user can interact with your app through the proxy, they must:
+
+1. **Authorize charging by the paywall** — granting permission to be charged.
+2. **Top up their balance** — by purchasing credits in their account.
+
+### Authorizing the Paywall
+
+Users must explicitly authorize paywall before any charges are applied. This is handled through an **authorization flow**:
+
+- If the user is not authorized, they’ll receive a response containing a `url` to the authorization page.
+- Once authorized, their ID will be associated with your paywall and you can begin charging them.
+- You can optionally trigger the flow by calling the `/user/connect` endpoint.
+
+### Topping Up Balance
+
+If a user’s balance is insufficient, the API will return a response containing a **top-up link** (via the `/chat/completions` or `/user/balance` endpoints):
+
+- The top-up process opens a user account page where users can purchase credit.
+- Credits are deposited directly into the user's **account.**
+- Once topped up, the proxy will allow usage to resume without interruptions.
+
+This payment method doesn't require you to connect any crypto or stripe account. Everything works automatically out of the box. We handle user payments and you can withdraw paywall earnings to any crypto wallet.
