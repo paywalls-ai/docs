@@ -28,7 +28,7 @@ In this mode:
 Enabling Stripe mode is simple:
 
 1. In your Paywall configuration, select **Stripe** as your payment option.
-2. Paste your **Stripe Restricted API Key**.
+2. Paste your [**Stripe Restricted API Key**](#api-keys).
 
 That’s it — [Paywalls.ai](http://Paywalls.ai) automatically:
 
@@ -82,6 +82,10 @@ This is safer by design, since the key is only permitted to:
 - **Subscribe to** `checkout.session.completed` **events**
 
 We never use the key to read customer data, process refunds, or access unrelated resources in your Stripe account.
+
+<Note>
+  [Learn how to create Stripe API Key](https://docs.stripe.com/keys#create-restricted-api-secret-key)
+</Note>
 
 ### Safety practices
 
