@@ -1,12 +1,93 @@
 ---
 title: "Stripe"
-description: "Stripe integration is coming soon."
+description: "In addition to the default Paywalls.ai wallet, developers can enable Stripe-based payments mode."
 ---
 
-### Overview
+## What it is
 
-Every user receives their own virtual wallet. You have full custody over the users virtual funds. Users top up using your own Stripe account.
+In this mode:
 
-<Note>
-  More details coming soon
-</Note>
+- Each **paywall** has its own **virtual wallet**.
+- End-users top up credits directly to the developer’s paywall using Stripe Checkout.
+- Funds go **directly into the developer’s Stripe account**.
+- [Paywalls.ai](http://Paywalls.ai) keeps a **ledger** of balances and charges per user _within that paywall_.
+
+## Key Differences vs Default Mode
+
+| Feature                | Default ([Paywalls.ai](http://Paywalls.ai) Wallet)         | Stripe Payments Mode (Scoped Wallets)                          |
+| :--------------------- | :--------------------------------------------------------- | :------------------------------------------------------------- |
+| **Balance scope**      | Cross-paywall (user can spend across apps)                 | Paywall-scoped (credits usable only in the app they topped up) |
+| **Fund custody**       | [Paywalls.ai](http://Paywalls.ai)-managed                  | Goes directly to developer’s Stripe account                    |
+| **User authorization** | User must connect & approve charges                        | Top-up = implicit authorization                                |
+| **Top-up options**     | Crypto, Stripe, [Paywalls.ai](http://Paywalls.ai) payments | Stripe Checkout (cards, wallets, etc.)                         |
+| **UI**                 | [Paywalls.ai](http://Paywalls.ai) wallet UI                | Minimal — developer can build own UI or embed Stripe           |
+| **Ecosystem effect**   | Shared balance across apps                                 | Self-contained per app credits                                 |
+
+## Setup
+
+Enabling Stripe mode is simple:
+
+1. In your Paywall configuration, select **Stripe** as your payment option.
+2. Paste your **Stripe Restricted API Key**.
+
+That’s it — [Paywalls.ai](http://Paywalls.ai) automatically:
+
+- Creates the required **Stripe webhook** for top-up confirmations.
+- Connects your paywall to your Stripe account.
+- Starts issuing Stripe Checkout links to users when they need to top up.
+
+No extra manual webhook setup or configuration is needed.
+
+## How it works
+
+<Steps>
+  <Step title="Top-up">
+    - When a user runs out of balance, [Paywalls.ai](http://Paywalls.ai) returns a **Stripe Checkout link**.
+    - User completes payment (card, Apple Pay, Google Pay, etc.).
+    - Funds go directly into your Stripe account.
+  </Step>
+  <Step title="Ledger entry">
+    - [Paywalls.ai](http://Paywalls.ai) records the payment in the **paywall-scoped ledger** for that user.
+    - Example: `user_123` → `5.00` credits in `paywall_abc`.
+  </Step>
+  <Step title="Spending">
+    - On each request, [Paywalls.ai](http://Paywalls.ai) deducts from the user’s paywall balance.
+    - If insufficient, another top-up link is returned.
+  </Step>
+</Steps>
+
+## When to use Stripe Payments Mode
+
+✅ You want **funds deposited directly in Stripe**.\
+✅ You don’t need balances to transfer across apps.\
+✅ You prefer minimal UX — top-up = charge authorization.\
+✅ You want to keep Stripe as your single source of truth for payments.
+
+Use the [******default Paywalls.ai wallet******](http://Paywalls.ai) if you want cross-app balances, crypto support, or ecosystem effects.
+
+## Notes
+
+- Each paywall has its own balance; credits are not portable across apps.
+- Refunds must be issued from your Stripe dashboard ([Paywalls.ai](http://Paywalls.ai) will sync the ledger entry).
+- Supported currencies and payment methods depend on your Stripe configuration.
+
+## API Keys
+
+[Paywalls.ai](http://Paywalls.ai) requires a **Restricted Stripe API Key**, not a full secret key.\
+This is safer by design, since the key is only permitted to:
+
+- **Create a webhook** (for receiving top-up events)
+- **Create Checkout links** (for user payments)
+- \*\*Subscribe to \*\*`checkout.session.completed`**events**
+
+We never use the key to read customer data, process refunds, or access unrelated resources in your Stripe account.
+
+### Safety practices
+
+- Always use **restricted keys** with minimal permissions.
+- Rotate keys periodically in the Stripe dashboard.
+- Revoke old keys immediately if leaked or unused.
+
+---
+
+---
