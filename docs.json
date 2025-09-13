@@ -60,7 +60,7 @@
             "group": "User",
             "pages": [
               "api-reference/user/balance/get",
-              "api-reference/user/balance/deposit",
+              "api-reference/user/balance/deposit/post",
               "api-reference/user/balance/topup/get",
               "api-reference/user/charge/post",
               "api-reference/user/connect/get",
