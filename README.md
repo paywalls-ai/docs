@@ -2,8 +2,6 @@
 
 Monetize AI assistants, agents, and MCP tools without building billing. Change a URL, set a price, and get paid.
 
-![Hero](</images/image(7).png>)
-
 ## Why Paywalls
 
 - OpenAI‑compatible proxy: swap `baseURL` and key; keep your client code.
