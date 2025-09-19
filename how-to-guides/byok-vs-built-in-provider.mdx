@@ -1,0 +1,17 @@
+---
+title: "BYOK vs Built-in Provider"
+---
+
+### Default mode (App‑scoped)
+
+- **Required:** Connect a **model provider** via BYOK. Paywalls cannot charge a third‑party provider directly from the app‑scoped virtual wallet.
+- **Options:** OpenAI, Together AI (OpenAI‑compatible), OpenRouter (unified OpenAI‑style API), or any OpenAI‑compatible endpoint.
+- **Billing:** You pay your provider; Paywalls bills your **end users** against their app‑scoped balance.
+
+### Shared mode (Cross‑app)
+
+- **Optional:** Use the **built‑in provider (powered by OpenRouter)** to run any supported model with **no setup**.
+- **Alternative:** BYOK is also supported if you need your own contracts or models.
+- **Billing:** End users pay from their **shared wallet**; Paywalls automatically splits the charge between **developer revenue** and **provider cost** to preserve your configured margin.
+
+> **Roadmap:** Built‑in provider for **Default mode** (developer pays the provider separately; Paywalls still handles billing your users).

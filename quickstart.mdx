@@ -3,82 +3,112 @@ title: "Quickstart"
 icon: "rocket"
 ---
 
-## 1. What is [Paywalls.ai](http://Paywalls.ai)?
+### Step 1 — Create a paywall & choose mode (immutable)
 
-[Paywalls.ai](http://Paywalls.ai) is a **programmable paywall and usage-based billing proxy** for OpenAI-compatible APIs.\
-It lets you monetize any LLM without changing your frontend code — simply route your API requests through [Paywalls.ai](http://Paywalls.ai) instead of calling the model provider directly.
+Create a paywall in the dashboard and choose your mode. This sets how money flows and **cannot be changed later**.
 
-<Info>**OpenAPI spec:** https://api.paywalls.ai/v1/openapi.yml</Info>
+- **Default (App‑scoped wallet)** — You collect payments directly (e.g., Stripe or your own rails). Users’ balances live in your app’s scope. You credit balances via **Deposit API** and charges deduct from that balance. _No end‑user authorization step._
+- **Shared (Cross‑app wallet)** — Paywalls.ai hosts a **user‑controlled** wallet that can be spent across apps. Users authorize your paywall. You earn per usage and later **withdraw**. _End‑user authorization required._
 
-## 2. Create Your Account & API Key
+> Not sure which to pick? See **How‑to → Choose a mode (Default vs Shared)**.
 
-1. Sign up at [Paywalls.ai Dashboard](https://dashboard.paywalls.ai)
-2. Create a **Paywall** in the dashboard
-3. Copy your **API Key** (you’ll use this in the `Authorization` header)
+---
 
-## 3. Point Your App to the Proxy
+### Step 2 — Configure a model provider
 
-Replace your OpenAI endpoint and key with the [Paywalls.ai](http://Paywalls.ai) endpoint and your API key.
+- **Default mode (required):** connect a provider via **BYOK**. Options include **OpenAI**, **Together AI** (OpenAI‑compatible), **OpenRouter** (unified OpenAI‑style API), or any **OpenAI‑compatible** endpoint (self‑hosted or vendor).
 
-\*\*Example (Node.js with \*\*`openai`**npm package):**
+  > In Default mode, balances are _virtual/app‑scoped_, so Paywalls cannot pay a third‑party model provider on the user’s behalf.
 
-```javascript
+- **Shared mode (optional):** either use the **built‑in provider (powered by OpenRouter)** with **no setup** to access OpenRouter models immediately, or connect your own keys (BYOK). Model costs are charged to the **end‑user’s shared wallet**; Paywalls automatically splits charges to preserve your developer margin.
+
+---
+
+### Step 3 — Configure payments / top‑ups
+
+- **Default mode:** in the dashboard, paste a **restricted Stripe API key**. Paywalls will **auto‑generate checkout links** when users need to top up and **auto‑subscribe to webhooks** to credit balances. _(No custom checkout/webhook code required.)_
+  Alternatively, use **custom rails** and call **Deposit API** after you receive funds.
+- **Shared mode:** no payment setup required—**Paywalls hosts top‑ups**. Users fund their shared wallet; you’ll see earnings accrue for **withdrawal**.
+
+---
+
+### Step 4 — Copy API key & base URL; make your first request
+
+Grab your paywall API key (`sk-paywalls-…`) and point your existing OpenAI client at the Paywalls base URL.
+
+**Node (OpenAI SDK)**
+
+```ts
 import OpenAI from "openai";
 
 const client = new OpenAI({
-  apiKey: "sk-paywalls-xxxxxxxx",
+  apiKey: process.env.PAYWALLS_API_KEY, // sk-paywalls-...
   baseURL: "https://api.paywalls.ai/v1",
 });
 
-const completion = await client.chat.completions.create({
-  model: "gpt-3.5-turbo",
-  messages: [{ role: "user", content: "Hello world" }],
-  user: "user_123", // or pass via X-Paywall-User header
+const resp = await client.chat.completions.create({
+  model: "openai/gpt-4o-mini",
+  user: "user_123", // or: send X-Paywall-User header
+  messages: [{ role: "user", content: "Hello!" }],
 });
-
-console.log(completion.choices[0].message.content);
+console.log(resp.choices[0]?.message?.content);
 ```
 
-<Note>
-  **Note:** You can pass the user ID in the request body (`user` property) or in
-  an `X-Paywall-User` header. [Learn more about User
-  Identification](/paywall/user-identity).
-</Note>
+**Python (OpenAI SDK)**
 
-## 4. How It Works (In Short)
+```python
+from openai import OpenAI
+import os
 
-1. **Proxy receives your request**\
-   Identifies the user and checks their paywall authorization and balance.
-2. **If not authorized** → returns an `authorization` link\
-   **If balance too low** → returns a `topup` link
-3. **If authorized** → forwards the request to the LLM provider
-4. **Bills in real time** based on actual usage (tokens, per-request fees, or both)
+client = OpenAI(api_key=os.environ["PAYWALLS_API_KEY"],
+                base_url="https://api.paywalls.ai/v1")
 
-```mermaid
-flowchart TD
-    A(User) <-->| Chat messages | B(Your Application)
-    B <-->| Chat completion request | C(Paywalls proxy API)
-    C --> D[If user has not authorized charges]
-    D -->|Paywalls Authorization message| B
-    C --> E[If user has not enough balance]
-    E -->|Paywalls Topup message| B
-    C --> F[If user has authorized charges and has enough balance]
-    F -->|Proxy request| G(LLM Provider)
+resp = client.chat.completions.create(
+    model="gpt-4o-mini",
+    user="user_123",
+    messages=[{"role": "user", "content": "Hello!"}],
+)
+print(resp.choices[0].message.content)
 ```
 
-## 5. Billing Options
+**fetch (header identity)**
 
-You can configure each paywall or model to bill by:
+```js
+const r = await fetch("https://api.paywalls.ai/v1/chat/completions", {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${process.env.PAYWALLS_API_KEY}`,
+    "Content-Type": "application/json",
+    "X-Paywall-User": "user_123", // header-based identity
+  },
+  body: JSON.stringify({
+    model: "openai/gpt-4o-mini",
+    messages: [{ role: "user", content: "Hello!" }],
+  }),
+});
+const json = await r.json();
+```
 
-- **Per request** — fixed price per API call
-- **Per token** — based on measured prompt & completion tokens
-- **Manual charges** — via `/user/charge`
-- **Subscriptions** — handled externally or via custom logic
+**curl**
 
-## 6. Benefits
+```bash
+curl https://api.paywalls.ai/v1/chat/completions \
+  -H "Authorization: Bearer $PAYWALLS_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model":"openai/gpt-4o-mini",
+    "user":"user_123",
+    "messages":[{"role":"user","content":"Hello!"}]
+  }'
+```
 
-- **Drop-in compatible** with the OpenAI API
-- No custom billing or metering code required
-- Works with any frontend/backend stack
-- Supports pay-per-message, microtransactions, and token quotas
-- Use with **code** or **no-code** tools (Zapier, n8n, Flowise, etc.)
+---
+
+### Step 5 — How responses behave (both modes)
+
+- Paywall-required flows arrive as **normal assistant messages**. Your app does **not** need special branching—render them like any chat reply.
+- If the user must **authorize** (Shared) or **top up** (both modes), the assistant message already contains the **link** (authorization or checkout). After completion, usage proceeds and the next responses stream normally.
+- **Default mode**: Stripe webhooks **auto‑deposit** into the app‑scoped balance.
+- **Shared mode**: charges deduct from the **shared wallet**; your earnings accrue for **withdrawal**.
+
+> **Tip**: Always send a stable, pseudonymous `user` value—either in the body (`user`) or via `X-Paywall-User`.

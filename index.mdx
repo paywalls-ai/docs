@@ -1,151 +1,47 @@
 ---
 title: "Introduction"
-description: "Paywalls.ai is a real-time proxy that meters usage, applies dynamic pricing, and handles payments—so you can monetize any OpenAI‑compatible model with minimal changes."
+description: "Paywalls.ai is an AI‑first monetization platform for no‑code builders and developers alike."
 icon: "book-open"
 ---
 
-Meet [Paywalls.ai](https://paywalls.ai): a programmable paywall and usage-based billing proxy for OpenAI-compatible APIs. Route your requests through the proxy to add pricing rules, authorization, and real-time charging—without rebuilding billing or metering.
+It’s not just another billing tool—it’s purpose‑built for AI apps, agents, and automations. Today it provides an OpenAI‑compatible chat completions proxy with real‑time metering, dynamic pricing, billing and payment integrations; next, it’s expanding to images, audio, video, embeddings, MCP tools, agent‑to‑agent payments and more.
 
-<Info>
-  Production API base URL: `https://api.paywalls.ai/v1`
-</Info>
+**Build AI products, not a billing system.** You focus on your product; we handle the hard parts of **pricing, metering, and getting paid**.
 
-## Get started in minutes
+### What you get (at a glance)
 
-<Steps>
-  <Step title="Create an API key">
-    Sign up and create a paywall in the [Dashboard](https://dashboard.paywalls.ai). Copy the secret API key.
-  </Step>
-  <Step title="Point your client to the proxy">
-    Replace your OpenAI base URL and key with Paywalls.ai.
+- **Monetization in minutes, not months** — launch with a working checkout, and usage metering instead of building billing, reconciliation, and reporting from scratch.
+- **Dynamic, AI‑native pricing** — price per request, per token, or hybrid; set different rates per model or feature; run promos or free/trial credits without code changes.
+- **Instant paywalls** — block unpaid usage and surface prebuilt **authorize/top‑up** experiences exactly when needed so you stop leaking value.
+- **Wallets that fit your go‑to‑market** — pick **Default (app‑scoped)** balances for a tightly controlled UX or **Shared (cross‑app)** balances when you want users to top up once and spend across apps.
+- **Provider‑agnostic control** — standardize pricing across OpenAI/Anthropic/other providers and keep margins stable even as model menus and rates evolve.
+- **A real ledger** — every top‑up and charge is recorded for exports, audits, and analytics.
 
-    <CodeGroup>
+### Why this matters
 
-    ```javascript Node.js
-    import OpenAI from "openai";
-    
-    const client = new OpenAI({
-    apiKey: process.env.PAYWALLS_API_KEY, // sk-paywalls-...
-    baseURL: "https://api.paywalls.ai/v1",
-    });
-    
-    const res = await client.chat.completions.create({
-    model: "openai/gpt-5",
-    user: "user_123", // or use X-Paywall-User header
-    messages: [{ role: "user", content: "Hello!" }],
-    });
-    
-    console.log(res.choices[0]?.message?.content);
-    
-    ```
+- **AI usage is spiky and granular.** Prices differ by model, input/output tokens, and even capability tiers. Rolling your own metering and price logic is slow, brittle, and distracts from shipping features. Paywalls.ai gives you a **purpose‑built, usage‑based foundation** that matches how AI is actually billed.
+- **Pricing changes often.** You’ll want to experiment (e.g., minimum fee + per‑token, per‑tool charges, trials, bundles). With Paywalls.ai, you can **iterate pricing without refactoring** your app.
+- **Cash flow and guardrails.** Built‑in balance checks and spend controls stop runaway costs, while a clear ledger makes finance and support easier.
 
-    
-    ```python Python
-    from openai import OpenAI
-    import os
-    
-    client = OpenAI(
-        api_key=os.environ["PAYWALLS_API_KEY"],  # sk-paywalls-...
-        base_url="https://api.paywalls.ai/v1",
-    )
-    
-    resp = client.chat.completions.create(
-        model="openai/gpt-5",
-        user="user_123",  # or pass X-Paywall-User header
-        messages=[{"role": "user", "content": "Hello!"}],
-    )
-    
-    print(resp.choices[0].message.content)
-    ```
+### Common outcomes for builders
 
-    
-    ```javascript JavaScript (fetch)
-    const res = await fetch("https://api.paywalls.ai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.PAYWALLS_API_KEY}`,
-        "Content-Type": "application/json",
-        "X-Paywall-User": "user_123",
-      },
-      body: JSON.stringify({
-        model: "openai/gpt-5",
-        messages: [{ role: "user", content: "Hello!" }],
-      }),
-    });
-    const data = await res.json();
-    console.log(data.choices?.[0]?.message?.content);
-    ```
+- **Launch paid v1 fast:** gate AI usage behind a paywall and start charging in minutes — no custom billing stack.
+- **Freemium that converts:** give, for example, **100 free messages** or **\$5 in trial credits**, then automatically prompt for top‑ups or route to a subscription.
+- **Predictable margins:** enforce a **minimum fee** plus **per‑token** pricing per model; change rates centrally without code changes.
+- **Per‑model dynamic pricing:** let users pick a model and automatically apply the right rate while protecting margins across providers.
+- **Scale from no‑code to prod:** start with no‑code tools like Zapier/n8n; graduate to Node/Python/Edge using the same paywall settings.
 
-    
-    ```bash cURL
-    curl https://api.paywalls.ai/v1/chat/completions \
-      -H "Authorization: Bearer $PAYWALLS_API_KEY" \
-      -H "Content-Type: application/json" \
-      -H "X-Paywall-User: user_123" \
-      -d '{
-        "model":"openai/gpt-5",
-        "messages":[{"role":"user","content":"Hello!"}]
-      }'
-    ```
+### What Paywalls.ai replaces
 
-    </CodeGroup>
-  </Step>
-  <Step title="Identify the user on every request">
-    Pass a stable user ID via request body (`user`) or header (`X-Paywall-User`).
+- **Metering hacks:** ad‑hoc token counters, cron jobs, and spreadsheet‑driven charge calculations.
+- **Patchwork payments:** one‑off Stripe calls/webhooks scattered across services; manual reconciliation.
+- **DIY ledgers:** custom tables/scripts for balances, top‑ups, refunds, and disputes.
+- **Inconsistent paywalls:** scattered “pay now” modals and error messages that don’t reflect real balance/authorization state.
 
-    This enables authorization and billing.
+### What stays yours
 
-    <Note>
-      Learn more: [User Identity](/paywall/user-identity)
-    </Note>
-  </Step>
-  <Step title="Handle paywall responses">
-    - Not authorized → you’ll get an authorization URL
-    - Low balance → you’ll get a top-up URL
-    - Authorized \+ funded → request is billed and proxied to the model
-  </Step>
-</Steps>
+- Your product experience, data flows, and model choices.
+- Your pricing strategy — Paywalls.ai makes it easy to implement and change.
 
-## Why Paywalls.ai
-
-- Drop-in OpenAI compatibility (no SDK lock-in)
-- Real-time cost control and guaranteed margins
-- Works with any stack: code and no-code
-- Monetize anywhere: frontends, backends, agents, and MCP tools
-
-## What happens on each request
-
-1. Authenticate your paywall via Bearer API key
-2. Extract user ID (body, header, or URL)
-3. Check authorization and balance; return actionable links if needed
-4. Compute and charge per your pricing rules (per-request and/or per-token)
-5. Forward to the provider and stream results back
-
-## Explore next
-
-<CardGroup cols={2}>
-  <Card title="Quickstart" icon="rocket" href="/quickstart">
-    First proxy request and common patterns.
-  </Card>
-  <Card title="Overview" icon="table-of-contents" href="/overview">
-    Architecture, flows, and core components.
-  </Card>
-  <Card title="User Identity" icon="circle-user" href="/paywall/user-identity">
-    How to pass user IDs (body, header, URL).
-  </Card>
-  <Card title="Proxy" icon="chevrons-left-right-ellipsis" href="/paywall/proxy">
-    Endpoint, auth, and runtime behavior.
-  </Card>
-  <Card title="Payments" icon="hand-coins" href="/paywall/payments">
-    Authorization and top-up flows.
-  </Card>
-  <Card title="Billing" icon="circle-dollar-sign" href="/paywall/billing">
-    Pricing rules, metering, and charging.
-  </Card>
-  <Card title="Configuration" icon="cog" href="/paywall/configuration">
-    Set up rules, limits, and defaults.
-  </Card>
-  <Card title="API Reference" icon="book" href="/api-reference/introduction">
-    Endpoints, schemas, and examples.
-  </Card>
-</CardGroup>
+**Next steps**
+Head to **Quickstart** to make your first paid request. When you’re ready to go deeper, see **Core concepts** for paywall modes, user identity, and pricing, then explore **How‑to guides** for Stripe, model providers, MCP charges, and no‑code flows.

@@ -1,0 +1,12 @@
+---
+title: "No-code: Zapier, n8n, and other flows"
+---
+
+Ship a paywalled AI flow with no code by calling the Chat Completions endpoint from your workflow tool. The **assistant message** you get back is what you show to users—no special branching required.
+
+- **Zapier**: Use **Webhooks by Zapier → Custom Request** to call `POST https://api.paywalls.ai/v1/chat/completions` with your headers/body. The returned assistant message may include an **authorization** or **checkout** link—just pass it through to your UI or messaging step.
+- **n8n**: Use the **HTTP Request** node with `Authorization: Bearer <PAYWALLS_API_KEY>` and optional `X-Paywall-User`. Forward the returned assistant message to the next node (chat UI, email, Slack, etc.).
+
+> Tip: Store your `PAYWALLS_API_KEY` as a secret/credential in your no‑code tool; do not hardcode it in workflows.
+
+**TODO:** Official templates & screenshots.

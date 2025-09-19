@@ -1,0 +1,97 @@
+---
+title: "Use paywalls with existing subscriptions (Stripe, etc.)"
+---
+
+You can keep your **existing subscription plans** (e.g., monthly tiers in Stripe) and use Paywalls to **meter AI usage**. The pattern is simple:
+
+- When a subscription cycle is **paid**, grant the user **credits** by calling the **Deposit API** (Default mode only).
+- As the user consumes the product, the **Proxy** charges usage against that credit balance.
+- If the balance reaches zero **mid‑cycle**, users can **top up** via the automated Stripe Checkout flow to continue using the service immediately.
+- At the **next cycle**, grant a **new bundle of credits** according to the plan. (Decide whether unused credits roll over.)
+
+> This guide targets **Default mode** (app‑scoped wallet). In **Shared mode**, the wallet is user‑controlled and external deposit grants aren’t supported yet. You can still run subscriptions for access/entitlements while usage is billed from the shared wallet.
+
+### Map plans → credit grants
+
+Create a table that maps subscription **tiers** to the **credit amount** you want to deposit each cycle, for example:
+
+| Plan    | Monthly price |  Monthly credits |
+| ------- | ------------: | ---------------: |
+| Starter |           \$9 |    90,000 tokens |
+| Pro     |          \$29 |   400,000 tokens |
+| Team    |          \$99 | 2,000,000 tokens |
+
+> Choose units that match your pricing (**tokens**, **requests**, or **hybrid**). You can change the mapping any time; the next cycle uses the new amounts.
+
+### Event to listen for (Stripe)
+
+Listen for the subscription invoice being **paid** and only then grant credits:
+
+- `invoice.payment_succeeded` with `billing_reason=subscription_create` → first cycle
+- `invoice.payment_succeeded` with `billing_reason=subscription_cycle` → renewals
+
+These values ensure you don’t grant credits for proration or non‑subscription invoices.
+
+### Pseudocode (webhook → Deposit API)
+
+```ts
+// 1) Receive Stripe webhook
+if (event.type === "invoice.payment_succeeded") {
+  const invoice = event.data.object;
+  const reason = invoice.billing_reason; // 'subscription_create' | 'subscription_cycle' | ...
+  if (reason === "subscription_create" || reason === "subscription_cycle") {
+    const userId = mapStripeCustomerToUser(invoice.customer);
+    const plan = extractPlanFromInvoice(invoice);
+    const creditAmount = creditsForPlan(plan); // your mapping
+
+    // 2) Grant credits in Default mode
+    await fetch("https://api.paywalls.ai/v1/user/balance/deposit", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.PAYWALLS_API_KEY}`,
+        "Content-Type": "application/json",
+        "Idempotency-Key": invoice.id, // prevent double deposits on retries
+      },
+      body: JSON.stringify({
+        user: userId,
+        amount: creditAmount,
+        metadata: { plan, invoice: invoice.id },
+      }),
+    });
+  }
+}
+```
+
+**Notes**
+
+- Always make the handler **idempotent** using a stable key (e.g., `invoice.id`).
+- If you support **upgrades/downgrades** mid‑cycle, decide whether to grant a **pro‑rated** deposit or wait until the next cycle.
+- Record your mapping and resulting deposits in your own DB for support/audit.
+
+### Mid‑cycle top‑ups (optional)
+
+If a user burns through their plan credits before renewal:
+
+- The Proxy will return a **normal assistant message** with a **Stripe Checkout** link.
+- After payment succeeds, Paywalls **auto‑deposits** the purchased credits.
+- The user can continue immediately; the next cycle still grants the plan’s credits.
+
+### Other payment systems (PSPs)
+
+If you’re not on Stripe (or you also sell through other channels like app stores or crypto):
+
+- Handle the **payment confirmation** in your system.
+- Call the **Deposit API** with the correct amount and metadata (transaction id, plan, etc.).
+- Keep the same idempotency and audit practices.
+
+### Testing
+
+- Use **Stripe test keys** and **test cards** to run through the full flow in **Default mode** (no real funds).
+- Verify deposits appear in the **ledger** and usage charges decrement the balance.
+- Switch to live by replacing the Dashboard key with your **restricted live key**.
+
+**FAQ**
+
+- **Do credits roll over?** Your choice. If not, reset at each cycle; if yes, deposit only the delta.
+- **What if the subscription payment fails?** Don’t deposit; the next successful payment triggers the grant.
+- **Can I combine Subscription + pay‑as‑you‑go?** Yes—grant a monthly bundle, then let users top up mid‑cycle as needed.

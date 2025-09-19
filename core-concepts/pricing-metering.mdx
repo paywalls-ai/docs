@@ -1,0 +1,22 @@
+---
+title: "Pricing & Metering"
+---
+
+Pricing is **rule‑based** and **model‑aware** so you can balance UX and margins.
+
+### Pricing layers
+
+- **Per request** — a flat fee per API call (good for tools/actions and short prompts).
+- **Per token** — meter **prompt** + **completion** tokens (finalized after generation).
+- **Hybrid** — combine both (e.g., _minimum fee + per‑token_) to keep margins predictable.
+- **Promos/credits** — trial credits to reduce onboarding friction. _(TODO: expiry & abuse protection in dashboard.)_
+
+### Per‑model dynamic pricing
+
+Set different rates per model so users can self‑select price/performance. Hybrid typically provides the most stable margin across varied prompt sizes.
+
+### Metering details
+
+- Token usage is computed per request. When streaming, totals are **finalized at end** of the stream.
+- Rounding: charges round to the smallest supported unit for the configured currency after computation.
+- Manual charges (e.g., per‑tool fees) can be combined with usage charges in the same ledger period.

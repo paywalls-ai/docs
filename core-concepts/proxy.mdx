@@ -1,0 +1,34 @@
+---
+title: "Proxy"
+---
+
+The **proxy** is the drop‑in, OpenAI‑compatible layer that **enforces pricing and authorization**, **meters usage**, and **returns paywall‑aware assistant messages**. It dramatically simplifies setup because you **don’t need to build billing branches** in your app.
+
+### Why use the proxy?
+
+- **Zero‑branching UX** — When a user must authorize or top up, the proxy replies with a **normal assistant message** containing the correct link. You just render what you get.
+- **One client surface** — Keep using OpenAI SDKs and tools; change only the **base URL** and **key**.
+- **Consistent metering** — Requests are normalized, streamed tokens are measured, and pricing is applied centrally.
+- **Provider flexibility** — Swap models/providers without rewriting your app or pricing logic.
+- **Central guardrails** — Spend caps, token caps, and rate limits enforce your rules before provider calls.
+
+### What the proxy does
+
+- **Compatibility** — Accepts OpenAI‑style Chat Completions (incl. streaming, function/tool calls, JSON modes). _(Modalities beyond text are roadmap‑dependent.)_
+- **Decisioning** — Checks authorization (Shared), balance, and limits; decides whether to **return a link** or **execute** the request.
+- **Routing** — Forwards eligible requests to the selected provider (BYOK or built‑in) and proxies the stream back to you.
+- **Metering & pricing** — Counts tokens, computes charges, and writes **ledger** entries.
+- **Observability** — Attaches a **request id** and correlates ledger entries and events for support/analytics.
+
+### Security expectations
+
+- Your **paywall API key** must remain **server‑side**.
+- Always include a stable `user` id to prevent cross‑account leakage and enable correct limits.
+- Use **idempotency keys** for your own side‑effecting calls (e.g., manual charges) to avoid duplicates.
+
+### Performance & limits
+
+- Streaming is proxied with minimal overhead; if a stream drops, clients may reconnect and retry safely.
+- Rate limits and concurrency caps protect your app and budget. _(TODO: publish exact limits.)_
+
+> **Optional but recommended:** You can call Paywalls APIs directly for non‑chat features (e.g., manual charges). For chat usage, the proxy gives you the fastest path to a working, billable flow without custom billing code.

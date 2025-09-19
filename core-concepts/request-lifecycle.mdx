@@ -1,0 +1,12 @@
+---
+title: "Request Lifecycle"
+---
+
+1. **Request** — Your app calls the OpenAI‑compatible endpoint with a **paywall key** and a user id.
+2. **Decision** — The platform evaluates **authorization** (Shared), **balance**, **limits**, and **pricing** rules.
+3. **If action is needed** — The response is a normal **assistant message** containing an **authorization** or **checkout** link. You render it as‑is; no special branching.
+4. **Execution** — If authorized & funded, the request is forwarded to the configured **provider** (BYOK or built‑in). Streaming is passed through.
+5. **Meter & bill** — Token usage is measured; the applicable pricing rule computes the charge. A **charge** entry is written to the **ledger**.
+6. **Events & analytics** — Webhooks (optional) and exports keep your systems in sync. _(TODO: event names & payloads.)_
+
+> **TODO:** Add sequence diagram and a small state machine sketch.

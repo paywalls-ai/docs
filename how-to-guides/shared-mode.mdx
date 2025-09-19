@@ -1,0 +1,80 @@
+---
+title: "Shared Mode"
+---
+
+Use Shared mode when you want a user‑controlled wallet that works across Paywalls‑enabled apps, minimal setup (built‑in provider available), and automatic revenue split that preserves your margin.
+
+## What it is
+
+- Users authorize your paywall once, top up their shared wallet, and can spend across apps.
+- You can use the built‑in provider (powered by OpenRouter) with no keys, or BYOK.
+- Charges deduct from the user’s shared wallet; your developer earnings accrue for withdrawal.
+
+## When to use it
+
+- You want the lowest‑friction launch (no provider setup required).
+- Your users may use multiple apps; a single wallet improves UX and conversion.
+- You’re fine with hosted top‑ups and later withdrawals rather than instant settlement to your Stripe.
+
+## Key behaviors
+
+- Authorization required: the first time a user interacts with your paywall, they’ll be asked to authorize it.
+- Assistant messages: if authorization or funding is needed, the proxy returns a normal assistant message containing the correct link—render it as a typical model reply.
+- Pricing: per‑model pricing + optional markup is enforced by the proxy; manual charges are also supported.
+
+## Typical flow
+
+1. First chat request (not authorized yet)
+
+- You call POST /chat/completions. If the user isn’t connected, you receive a normal assistant message with an authorization link.
+- Show that message verbatim in your UI. After the user authorizes, requests proceed.
+
+2. Insufficient funds
+
+- If balance is low, the assistant message contains a top‑up link (hosted).
+- After payment, the next request succeeds automatically.
+
+3. Normal usage
+
+- Requests are metered and charged automatically; responses stream as usual.
+
+## Useful endpoints
+
+- Authorization status and link: [api-reference/user/connect/get.mdx](api-reference/user/connect/get.mdx)
+- Top‑up link: [api-reference/user/balance/topup/get.mdx](api-reference/user/balance/topup/get.mdx)
+- Manual one‑off charges: [api-reference/user/charge/post.mdx](api-reference/user/charge/post.mdx)
+- User menu (links for UI): [api-reference/user/menu/get.mdx](api-reference/user/menu/get.mdx)
+- Current balance (for display): [api-reference/user/balance/get.mdx](api-reference/user/balance/get.mdx)
+
+## Minimal example (manual charge + renderable fallback)
+
+```ts
+// If success === false, the 'message' field is a renderable assistant message (auth/top‑up link).
+const res = await fetch("https://api.paywalls.ai/v1/user/charge", {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${process.env.PAYWALLS_API_KEY}`,
+    "Content-Type": "application/json",
+    "Idempotency-Key": requestId,
+  },
+  body: JSON.stringify({ user, amount: "0.001", metadata: { requestId } }),
+});
+const json = await res.json();
+if (json.success) {
+  // proceed
+} else {
+  // show json.message to the user (no special branching needed)
+}
+```
+
+## Tips
+
+- Always send a stable, pseudonymous user id (body user or header X‑Paywall‑User).
+- Treat assistant messages as normal chat replies—just render them.
+- Use idempotency keys for all non‑idempotent POSTs (manual charges, your own side effects).
+
+See also:
+
+- Core concepts → [Paywalls, wallets & ledger](core-concepts/paywalls-wallets-ledger.mdx)
+- Core concepts → [Model providers](core-concepts/model-providers.mdx)
+- How‑to → [BYOK vs built‑in provider](how-to-guides/byok-vs-built-in-provider.mdx)

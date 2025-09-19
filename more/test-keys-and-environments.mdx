@@ -1,0 +1,27 @@
+---
+title: "Test keys & Environments"
+---
+
+Paywalls.ai does not yet provide a platform‑wide **sandbox/test mode**. You can still run safe end‑to‑end tests in **Default mode** using **Stripe test keys** (no real funds), then switch to live keys for production.
+
+### Default mode — test with Stripe
+
+1. In the dashboard, paste a **restricted Stripe test API key** (`sk_test_…`).
+2. Trigger a top‑up normally. The assistant message will include a **Stripe test checkout** link.
+3. Pay with a **Stripe test card** (e.g., `4242 4242 4242 4242`). Paywalls receives the webhook and **auto‑deposits** credits to the user’s app‑scoped balance.
+4. Make chat requests; charges are computed and written to the **ledger** just like production.
+
+### Switch to live
+
+- Replace the key with your **restricted Stripe live key** (`sk_live_…`) in the dashboard. No code changes required.
+- If you mirror balances in your own DB, clear any test balances/receipts before go‑live. Paywalls’ ledger will keep historical test entries for audit.
+
+### Shared mode — current limitations
+
+- Top‑ups are **hosted by Paywalls**; there is no sandbox yet. You can test **authorization** flows and paywall messages, but funding the shared wallet currently requires real payments. _(Roadmap: shared‑mode sandbox.)_
+
+### Tips
+
+- Never expose API keys in the browser; keep them server‑side.
+- Use clearly labeled test users (e.g., `user_test_alice`) to filter analytics.
+- If you use custom rails (non‑Stripe) in Default mode, simulate payments by calling **Deposit API** from your staging system.

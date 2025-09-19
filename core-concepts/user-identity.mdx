@@ -1,0 +1,29 @@
+---
+title: "User Identity"
+---
+
+Every billable call **must include a stable user id** so we can authorize, meter, and bill the right account.
+
+### What we use it for
+
+- Authorization & balance checks (Shared: access must be granted; Default: evaluate balance).
+- Per‑user limits (spend caps, token caps, concurrency).
+- Correct ledger attribution and analytics.
+
+### Design a good user id
+
+- Prefer **pseudonymous**, stable identifiers (e.g., `user_abc123`). Avoid PII (emails/phone numbers).
+- One logical person/device → one stable id across your app(s). If you migrate auth systems, add a mapping layer instead of changing ids in requests.
+- If you must rotate ids, store the old id in your own mapping; continue sending a **stable** id to Paywalls.
+
+### Where to send it
+
+1. **Body** `user` _(recommended; works with OpenAI SDKs)_
+2. **Header** `X-Paywall-User` _(easy via middleware)_
+3. **URL prefix** `/{user}/...` _(fallback when you can’t modify body/headers)_
+
+### Common mistakes
+
+- Using different ids on different requests for the same person.
+- Sending PII as the id.
+- Omitting the id on streaming retries (breaks metering/charges).

@@ -1,0 +1,21 @@
+---
+title: "Monetize MCP Tools"
+---
+
+Use **manual charges** after/around tool calls:
+
+```ts
+import axios from "axios";
+await axios.post(
+  "https://api.paywalls.ai/v1/user/charge",
+  { user: userId, amount: "0.001", metadata: { requestId, tool: toolKey } },
+  {
+    headers: {
+      Authorization: `Bearer ${process.env.PAYWALLS_API_KEY}`,
+      "Idempotency-Key": requestId,
+    },
+  }
+);
+```
+
+On `{ success: false, message }`, render the message verbatim (it already contains auth/top‑up UI).

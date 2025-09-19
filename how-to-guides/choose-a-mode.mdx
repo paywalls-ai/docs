@@ -1,0 +1,43 @@
+---
+title: "Choose a mode (Default vs Shared)"
+---
+
+Choosing a mode defines how money flows and **can’t be changed later**. Use this decision guide to pick the right setup for your product and team.
+
+### 60‑second decision quickstart
+
+- **Pick Default (App‑scoped)** if you want funds to land in **your Stripe or custom rails**, need tight control over refunds, and can connect your own **model provider** (BYOK).
+- **Pick Shared (Cross‑app)** if you want a **built‑in model provider** (powered by OpenRouter) with **no setup**, users to **top up once and spend across apps**, and built‑in **revenue split** that preserves your margin.
+
+### Comparison
+
+| Criterion                       | Default (App‑scoped wallet)                                                           | Shared (Cross‑app wallet)                                                     |
+| ------------------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| **Who holds funds**             | Developer (virtual, app‑scoped balance)                                               | End user (shared wallet across apps)                                          |
+| **Who pays the model provider** | **Developer** (BYOK required)                                                         | **Paywalls (built‑in) or BYOK**; end user pays from shared wallet             |
+| **Provider setup**              | **Required**: connect OpenAI, Together, OpenRouter, or any OpenAI‑compatible endpoint | **Optional**: built‑in provider available with no setup; BYOK also supported  |
+| **End‑user authorization**      | Not required                                                                          | Required (user authorizes your paywall)                                       |
+| **Top‑ups / payments**          | Your Stripe (restricted key) or custom rails; auto‑checkout link + auto‑deposit       | Hosted by Paywalls; link provided in assistant message                        |
+| **Cash flow**                   | Funds settle to **your accounts** immediately                                         | Earnings accrue in your **paywall**; withdraw later                           |
+| **Refunds**                     | You control refunds/credits                                                           | Refunds handled via shared wallet / platform rules _(TODO: finalize details)_ |
+| **Portability**                 | Balance usable **only** in your app                                                   | Balance usable **across** Paywalls‑enabled apps                               |
+| **Model catalog**               | Whatever your BYOK provides                                                           | Full OpenRouter catalog via built‑in provider (plus BYOK if desired)          |
+| **Setup time**                  | Minutes (provider + payments)                                                         | Seconds (payments hosted; provider optional)                                  |
+| **Can switch later?**           | **No**                                                                                | **No**                                                                        |
+
+### Use this if…
+
+- **Default:** You need direct cash flow to your Stripe, custom pricing per model you contract directly, or B2B control (credits, invoices, refunds) under your policies.
+- **Shared:** You want a low‑friction launch, cross‑app user wallets, and automatic provider settlement that preserves your configured margin.
+
+### Avoid if…
+
+- **Default:** You don’t want to manage a provider relationship or payments yourself.
+- **Shared:** You need per‑customer invoice workflows under your own merchant account.
+
+### After you choose
+
+- **Default:** Go to **Quickstart → Step 2 (Configure a model provider)**, then **Step 3 (Payments / top‑ups)**, then **Step 4 (First request)**.
+- **Shared:** Go to **Quickstart → Step 2 (Provider: optional)** and **Step 4 (First request)**; payments/top‑ups are hosted for you.
+
+> See also: **Core concepts → Paywalls, wallets & ledger**, **Core concepts → Model Providers**, **How‑to → BYOK vs built‑in provider**, **How‑to → Connect Stripe**.

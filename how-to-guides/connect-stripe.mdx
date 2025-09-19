@@ -1,0 +1,24 @@
+---
+title: "Connect Stripe"
+---
+
+In Default mode you collect payments directly. The fastest path is the **automated Stripe integration**; advanced teams can still bring custom rails.
+
+### Fast path — Automated Stripe integration
+
+1. In the Paywalls dashboard, paste a **restricted Stripe API key**.
+2. Paywalls will **auto‑create checkout links** when a user needs to top up and **auto‑subscribe to webhooks** to deposit credits after successful payment.
+3. The **assistant message** returned to your user includes the **checkout link**—render it like any model reply. After payment, the user’s **app‑scoped balance** is credited automatically.
+
+Recommended Stripe key settings:
+
+- Use a Restricted Key scoped to Checkout Sessions and the minimum read permissions needed for prices/products.
+- Keep your master secret key out of the integration entirely.
+
+### Advanced — Custom rails
+
+- Use your own checkout (Stripe Elements/Checkout or another PSP). On payment success, call `POST /v1/user/balance/deposit` to credit the user.
+- Keep your internal `user_id`, PSP `payment_intent`, and any invoice refs in `metadata` for reconciliation.
+- Make your webhook handler idempotent.
+
+> Security: Use a **restricted** key with only the permissions Paywalls needs; keep all API keys server‑side. Test with Stripe test keys first, then swap to live—no code changes required.

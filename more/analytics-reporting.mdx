@@ -1,0 +1,110 @@
+---
+title: "Analytics & Reporting"
+---
+
+Understand usage, revenue, and profit at a glance. The dashboard provides a real‑time ledger of every financial event, user‑level insights, and charts that help you track growth and margins.
+
+## What you can see
+
+- Ledger: every top‑up, charge, refund, and adjustment, with links back to the originating request/user.
+- Users: active users, balances, total spend, last activity, and status (authorized/connected).
+- Charts: revenue, provider cost, and profit over time; usage by model; top users and cohorts.
+
+> Default mode vs Shared mode: In Default mode you collect funds to app‑scoped balances via your own Stripe or rails; revenue is recognized on usage (charges). In Shared mode, users fund a shared wallet; your developer earnings accrue on usage and are available for withdrawal per policy.
+
+## Ledger (source of truth)
+
+Each row represents a financial event.
+
+- Types: deposit (top‑up), charge (usage), refund, adjustment.
+- Core fields: timestamp, user, paywall, requestId, model, amount, currency.
+- Metering: prompt_tokens, completion_tokens, total_tokens (when applicable).
+- Costs: provider_cost (COGS) and platform_fees (when applicable) to compute profit.
+- Metadata: optional JSON for reconciliation (e.g., Stripe payment_intent, checkout_session, your internal ids).
+
+Tips
+
+- Use consistent user ids; prefer stable, pseudonymous identifiers.
+- Include a requestId in your app and pass it in metadata for safe retries and auditing.
+- For manual one‑off charges, record business context in metadata for downstream analytics.
+
+See also: Core concepts → `core-concepts/paywalls-wallets-ledger.mdx` and `core-concepts/pricing-metering.mdx`.
+
+## Users view
+
+- Summary per user: total spend, current balance, last activity, and authorization status.
+- Drill‑down: per‑user ledger with filters by date, model, and event type.
+- Actions: copy authorization/top‑up links for support, review recent errors, and validate connection.
+
+## Charts & KPIs
+
+Track trends and health of your monetization.
+
+- Revenue: sum of usage charges for the selected period.
+- Provider cost (COGS): cost of model usage at provider rates.
+- Profit: revenue minus provider cost (and any applicable platform fees).
+- Usage mix: requests, tokens, and revenue by model.
+- Users: active payers, new payers, ARPU in period.
+
+Formulas
+
+- Gross revenue over period T:
+  $$ \text{Revenue}_T = \sum_{i \in T} \text{charge}\_i $$
+- Provider cost over period T:
+  $$ \text{COGS}_T = \sum_{i \in T} \text{provider_cost}\_i $$
+- Profit over period T:
+  $$ \text{Profit}\_T = \text{Revenue}\_T - \text{COGS}\_T - \text{platform_fees}\_T $$
+- ARPU (active payers):
+  $$ \text{ARPU}\_T = \frac{\text{Revenue}\_T}{\text{Active Payers}\_T} $$
+
+Note: In streaming requests, final token counts settle at the end of the stream.
+
+## Filtering & segmentation
+
+Use filters across all views to answer precise questions:
+
+- Time: today, 7/30/90 days, custom dates, and compare periods.
+- Mode: Shared vs Default.
+- Model: e.g., `openai/gpt-4o-mini` vs `anthropic/claude-3.5`.
+- User attributes: id, status (authorized), high/low balance, new vs returning.
+- Event type: deposits, charges, refunds, adjustments.
+
+Common questions you can answer
+
+- Which models drive most revenue and profit this month?
+- Who are my top spending users and what is their average cost to serve?
+- What’s the refund/adjustment rate by cohort?
+- Are retries or errors inflating costs for specific models?
+
+## Reconciliation (Stripe & custom rails)
+
+Default mode
+
+- Stripe: top‑ups appear as deposits in the ledger. We recommend storing `payment_intent` or `checkout_session` in metadata for each deposit to reconcile with Stripe reports.
+- Your own checkout: after payment success, call `POST /v1/user/balance/deposit` and include your payment id in metadata. Use idempotency for safe retries.
+
+Shared mode
+
+- Hosted top‑ups are managed by Paywalls; your developer earnings accrue from charges. Use the ledger to reconcile earnings and withdrawals.
+
+Operational tips
+
+- Always log `user`, `requestId`, and ledger `id` in your app logs for easy cross‑reference.
+- Make webhook handlers idempotent and respond only after durable writes.
+
+See also: `how-to-guides/connect-stripe.mdx`, `more/errors-limits-reliability.mdx`.
+
+## Export & integrations
+
+- CSV export: Coming soon (download from Ledger and Users views, with column selection and date range).
+- Programmatic export: Coming soon (API access for pulling ledger slices into your warehouse).
+- BI tools: Until export is available, you can mirror key identifiers (user id, requestId, payment ids) in your systems to join with internal data later.
+
+## Best practices
+
+- Send a `user` on every billable request; fall back to `X-Paywall-User` header if needed.
+- Use idempotency keys for non‑idempotent POSTs (e.g., manual charges, deposits from your rails).
+- Standardize model ids (e.g., `openai/gpt-4o-mini`) to keep analytics consistent.
+- For tests, label test users clearly to exclude them from production dashboards.
+
+Related docs: `core-concepts/pricing-metering.mdx`, `more/test-keys-and-environments.mdx`.

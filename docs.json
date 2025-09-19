@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Paywalls.ai API Documentation",
+  "name": "Paywalls.ai Documentation",
   "colors": {
     "primary": "#05B75E",
     "light": "#05B75E",
@@ -14,29 +14,56 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Documentation",
         "groups": [
           {
             "group": "Getting started",
-            "pages": ["index", "quickstart", "overview"]
+            "pages": ["index", "quickstart"]
           },
           {
-            "group": "Paywall",
+            "group": "Core concepts",
             "pages": [
-              "paywall/user-identity",
-              "paywall/payments",
-              "paywall/proxy",
-              "paywall/provider",
-              "paywall/billing",
-              "paywall/configuration",
-              "paywall/mcp"
+              "core-concepts/paywalls-wallets-ledger",
+              "core-concepts/user-identity",
+              "core-concepts/pricing-metering",
+              "core-concepts/request-lifecycle",
+              "core-concepts/model-providers",
+              "core-concepts/proxy"
             ]
           },
           {
-            "group": "Payments",
+            "group": "How‑to guides",
             "pages": [
-              "payments/paywalls",
-              "payments/stripe"
+              "how-to-guides/choose-a-mode",
+              "how-to-guides/configure-billing",
+              "how-to-guides/connect-stripe",
+              "how-to-guides/byok-vs-built-in-provider",
+              "how-to-guides/shared-mode",
+              "how-to-guides/monetize-mcp-tools",
+              "how-to-guides/no-code-zapier-n8n-flows",
+              "how-to-guides/use-case-monetization-recipes",
+              "how-to-guides/use-paywalls-with-existing-subscriptions"
+            ]
+          },
+          {
+            "group": "SDKs & Integrations",
+            "pages": [
+              "sdk-integrations/client-sdks",
+              "sdk-integrations/front-end-widgets",
+              "sdk-integrations/vercel-ai-sdk"
+            ]
+          },
+          {
+            "group": "More",
+            "pages": [
+              "more/test-keys-and-environments",
+              "more/playground",
+              "more/errors-limits-reliability",
+              "more/security-compliance",
+              "more/analytics-reporting",
+              "more/changelog",
+              "more/roadmap",
+              "more/glossary"
             ]
           }
         ]
@@ -74,14 +101,14 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Paywalls.ai",
+          "anchor": "Website",
           "href": "https://paywalls.ai",
           "icon": "globe"
         },
         {
-          "anchor": "Account",
-          "href": "https://wallet.paywalls.ai",
-          "icon": "wallet"
+          "anchor": "Dashboard",
+          "href": "https://dashboard.paywalls.ai",
+          "icon": "gauge"
         }
       ]
     }

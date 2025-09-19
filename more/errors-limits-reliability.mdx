@@ -1,0 +1,62 @@
+---
+title: "Errors, Limits & Reliability"
+---
+
+Design for failures you don’t control: networks, providers, retries, and user actions. These conventions keep requests safe and predictable.
+
+## Idempotency
+
+- Use an `Idempotency-Key` header for **non‑idempotent POSTs** such as `POST /v1/user/charge` (manual charges) or any custom side effects.
+- Generate a unique key per logical operation (e.g., `requestId` or a UUID). If you retry, **reuse the same key** to prevent duplicate charges. Keys are typically retained for around 24 hours.
+
+## Retries & backoff
+
+- For **429/5xx** from providers, use **exponential backoff** with jitter.
+- Webhooks are **at‑least‑once**: make handlers idempotent and safe to retry.
+
+## Webhooks (verification & delivery)
+
+- Verify signatures and use the **raw request body** during validation; many frameworks mutate bodies by default.
+- Use a **tolerance window** to prevent replays and respond with `2xx` only after durable processing.
+
+## Streaming resilience
+
+- If a stream is interrupted, you can **retry the whole request** (idempotently) or show the partial transcript and let the user continue.
+- Buffer streamed text on the server if you need to store a complete copy alongside the live stream.
+
+## HTTP statuses and response shapes
+
+- Chat proxy (insufficient funds/authorization): returns `200 OK` with a normal assistant message that already contains an authorization or top‑up link—render it as‑is.
+- Validation errors (missing fields, bad model): return standard 4xx with JSON errors.
+- Server/transient failures: return 5xx; retry with backoff.
+
+Example assistant‑message fallback:
+
+```json
+{
+  "id": "chatcmpl-123",
+  "object": "chat.completion",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "To continue, please authorize or top up: https://paywalls.ai/..."
+      },
+      "finish_reason": "stop"
+    }
+  ]
+}
+```
+
+## Rate limits
+
+- Treat `429` as a signal to slow down; back off and optionally **queue** non‑interactive work.
+
+## Timeouts
+
+- Set request timeouts to avoid stuck connections; prefer **cancellable** streams in clients and servers.
+
+## Observability
+
+- Log `user`, `requestId`, and paywall event ids with your application logs so support and finance can reconcile quickly.

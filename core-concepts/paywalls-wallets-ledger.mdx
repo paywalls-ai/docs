@@ -1,0 +1,38 @@
+---
+title: "Paywalls, Wallets & Ledger"
+---
+
+A **Paywall** is a named, versioned configuration that defines **how usage turns into money** for a given product or assistant. It binds together:
+
+- **Mode** _(Default or Shared)_ — where balances live and who controls funds.
+- **Pricing rules** — per‑request, per‑token, hybrid, and optional free credits.
+- **Provider access** — BYOK keys and routing, or the built‑in provider (Shared mode).
+- **Payment rails** — automated Stripe checkout (Default) or hosted top‑ups (Shared).
+- **Runtime rules** — spend caps, token caps, concurrency, and rate limits.
+
+### Wallets
+
+- **Default (App‑scoped wallet)** — Virtual credits live in your app’s scope. You decide when/how to top up (Stripe or custom rails), and charges deduct from this balance. Best for single‑app products, B2B contracts, and cases where you own refund policies.
+- **Shared (Cross‑app wallet)** — Real funds live in a user‑controlled wallet that works across any Paywalls‑enabled app. Users authorize your paywall, top up once, and spend anywhere. Best for ecosystems and marketplaces.
+
+### Ledger
+
+Every monetary event becomes a **ledger entry** (immutable). Typical entry types:
+
+- `topup` _(user‑initiated)_ — funds added to a shared wallet (hosted) or your Default checkout.
+- `deposit` _(developer‑initiated, Default)_ — credit a user after your custom PSP confirms payment.
+- `charge` — usage‑based deduction linked to a specific request (`request_id`, model, token stats).
+- `adjustment` / `refund` — corrections or goodwill credits.
+
+Each entry records **timestamp, paywall id, user id, model, pricing rule, currency/amount, metadata**. Use ledger exports for support, finance, and analytics.
+
+### Money flow (by mode)
+
+- **Default:** End‑user pays **you** (Stripe/custom). You pay the model provider via **BYOK**. Paywalls meters, enforces pricing, and writes the ledger.
+- **Shared:** End‑user funds their **shared wallet**. Paywalls settles the **provider cost** (built‑in provider or BYOK) and credits your **developer earnings**; you **withdraw** later.
+
+### Limits & controls
+
+Apply **per‑user** or **per‑paywall** controls: daily spend caps, per‑request token caps, and concurrency caps. These guard your margins and keep UX predictable.
+
+> **TODO:** Publish fee schedule, withdrawal rules, and on‑chain details.
