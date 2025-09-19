@@ -1,513 +1,620 @@
-openapi: 3.0.0
-info:
-  title: Paywalls.ai API
-  description: |
-    The Paywalls.ai API enables developers to integrate monetization and access control for OpenAI-compatible LLMs.
-
-    This proxy service supports multiple pricing strategies—including per-request, token-based, and subscription models—while maintaining full compatibility with the OpenAI API format.
-
-    Requests are automatically checked for user authorization and balance. If the user is not connected to the paywall, or lacks sufficient balance, the API will return actionable links for onboarding or top-up.
-
-    Use this API to monetize your AI-powered apps and services with minimal effort.
-
-    Visit [paywalls.ai](https://docs.paywalls.ai) for full documentation and setup guides.
-  version: 1.0.0
-servers:
-  - url: https://api.paywalls.ai/v1
-    description: Primary production server
-  - url: https://aventino-staging.grindery.com/api/v1
-    description: Staging server for development and testing
-security:
-  - ApiKeyAuth: []
-
-tags:
-  - name: Chat
-    description: |
-      OpenAI-compatible chat completion endpoint that enforces paywall logic before proxying the request to a model provider.
-
-      Automatically checks user connection, balance, and performs charging. Supports streaming and non-streaming completions.
-  - name: Models
-    description: |
-      Retrieve metadata and pricing information about the LLM models supported by the proxy.
-
-      Includes prompt and completion pricing, per-request costs, and display details for UI integration.
-  - name: User
-    description: |
-      Endpoints for managing user sessions, balance, and charging status.
-
-      Includes functionality for connecting to or disconnecting from the paywall, checking balance, initiating top-ups, and issuing manual charges.
-paths:
-  /chat/completions:
-    post:
-      summary: Proxy a chat completion request with automatic paywall enforcement
-      description: |
-        This endpoint proxies an OpenAI-compatible chat completion request and charges the user based on the configured monetization model (per request, per token, etc).
-
-        If the user is not connected to the paywall, the response will contain a connection link.
-
-        If the user is connected but has insufficient balance, a top-up link is returned.
-
-        On success, the request is forwarded to the underlying model provider and the result is returned.
-      tags:
-        - Chat
-      parameters:
-        - $ref: '#/components/parameters/XPaywallUser'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                model:
-                  type: string
-                  description: The model to use for generating the response.
-                messages:
-                  type: array
-                  description: A list of messages that make up the conversation.
-                  items:
-                    $ref: '#/components/schemas/Message'
-                  minItems: 1
-                user:
-                  type: string
-                  description: The unique identifier of the user making the request.
-                stream:
-                  type: boolean
-                  description: Whether to stream the response back to the client.
-                  default: false
-              required:
-                - model
-                - messages
-      responses:
-        200:
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                    example: chatcmpl-123
-                    description: The completion identifier.
-                  object:
-                    type: string
-                    example: chat.completion
-                    description: The type of the returned object.
-                  created:
-                    type: integer
-                    example: 1677652288
-                    description: The creation timestamp of the completion.
-                  choices:
-                    type: array
-                    description: The list of choices returned by the model.
-                    items:
-                      type: object
-                      properties:
-                        index:
-                          type: integer
-                          example: 0
-                          description: The index of the choice in the list.
-                        message:
-                          $ref: '#/components/schemas/Message'
-                        finish_reason:
-                          type: string
-                          example: stop
-                          description: The reason why the model stopped generating further tokens.
-  /models:
-    get:
-      summary: Retrieve available LLM models
-      description: |
-        Lists all models available through the proxy, including pricing information per model.
-
-        Useful for frontend model selectors or pricing calculators.
-      tags:
-        - Models
-      parameters:
-        - $ref: '#/components/parameters/XPaywallUser'
-      responses:
-        200:
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    description: A list of available models.
-                    items:
-                      $ref: '#/components/schemas/Model'
-                required:
-                  - data
-                example:
-                  data:
-                    - id: gpt-3.5-turbo
-                      object: model
-                      name: gpt-3.5-turbo
-                      display_name: GPT-3.5 Turbo
-                      description: A powerful language model for various tasks.
-                      pricing:
-                        prompt: '0.5'
-                        completion: '1'
-                        request: '0.01'
-  /user/balance:
-    get:
-      summary: Retrieve the user’s current balance
-      description: |
-        Returns the current prepaid balance for the user, both in raw units and a formatted string.
-
-        Use this to determine whether a user can afford new API requests or needs a top-up.
-      tags:
-        - User
-      parameters:
-        - $ref: '#/components/parameters/XPaywallUser'
-        - in: query
-          name: user
-          required: false
-          description: The unique identifier of the user to get menu items for.
-          schema:
-            type: string
-      responses:
-        200:
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  balance:
-                    type: string
-                    description: The current balance of the user, in wei
-                  balanceFormatted:
-                    type: string
-                    description: The current balance of the user, formatted for display.
-  /user/balance/topup:
-    get:
-      summary: Get a top-up link for adding user funds
-      description: |
-        Returns a link the user can visit to top up their balance. 
-
-        This is typically used when a request is rejected due to insufficient funds.
-      tags:
-        - User
-      parameters:
-        - $ref: '#/components/parameters/XPaywallUser'
-        - in: query
-          name: user
-          required: false
-          description: The unique identifier of the user to get menu items for.
-          schema:
-            type: string
-      responses:
-        200:
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  url:
-                    type: string
-                    description: The URL to redirect the user to for topping up their balance.
-  /user/charge:
-    post:
-      summary: Manually charge a user for a specific amount
-      description: |
-        Charges a specific user an arbitrary amount (in USDC equivalent), if the user is connected and has sufficient balance.
-
-        This can be used for non-standard billing scenarios such as one-time feature unlocks or external usage tracking.
-      tags:
-        - User
-      parameters:
-        - $ref: '#/components/parameters/XPaywallUser'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                amount:
-                  type: string
-                  description: The amount to charge the user, in usdc.
-                user:
-                  type: string
-                  description: The unique identifier of the user to charge.
-      responses:
-        200:
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    description: Indicates whether the charge was successful.
-                  message:
-                    type: string
-                    description: A message indicating the result of the charge operation.
-  /user/connect:
-    get:
-      summary: Check user connection status to the paywall
-      description: |
-        Checks whether a user is currently connected (i.e., has authorized charging).
-
-        If not connected, a `url` field will be returned to redirect the user to the connection flow (e.g., a consent or wallet approval page).
-      tags:
-        - User
-      parameters:
-        - $ref: '#/components/parameters/XPaywallUser'
-        - in: query
-          name: user
-          required: false
-          description: The unique identifier of the user to get menu items for.
-          schema:
-            type: string
-      responses:
-        200:
-          description: User is connected to the paywall.
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/UserConnectedResponse'
-                  - $ref: '#/components/schemas/UserNotConnectedResponse'
-  /user/disconnect:
-    get:
-      summary: Disconnect the user from the paywall
-      description: |
-        Revokes the user’s charging authorization and disconnects them from the paywall.
-
-        After this, any charge or request requiring payment will return a connection link instead of proceeding.
-      tags:
-        - User
-      parameters:
-        - $ref: '#/components/parameters/XPaywallUser'
-        - in: query
-          name: user
-          required: false
-          description: The unique identifier of the user to get menu items for.
-          schema:
-            type: string
-      responses:
-        200:
-          description: User is disconnected from the paywall.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    description: Indicates whether the disconnection was successful.
-                  message:
-                    type: string
-                    description: A message indicating the result of the disconnection operation.
-  /user/menu:
-    get:
-      summary: Get paywall menu items for the user
-      description: |
-        Returns a list of menu items relevant to the user based on their connection status and balance.
-
-        This can include links to top-up, activity history, and wallet management.
-
-        Useful for building user interfaces that need to display actionable items based on the user's paywall state.
-      tags:
-        - User
-      parameters:
-        - $ref: '#/components/parameters/XPaywallUser'
-        - in: query
-          name: user
-          required: false
-          description: The unique identifier of the user to get menu items for.
-          schema:
-            type: string
-      responses:
-        200:
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  topup:
-                    type: string
-                    description: URL to the top-up page for the user.
-                  activity:
-                    type: string
-                    description: URL to the activity page for the user.
-                  wallet:
-                    type: string
-                    description: URL to the wallet page for the user.
-  /user/balance/deposit:
-    post:
-      summary: Deposit credits into a user's virtual balance
-      description: |
-        This endpoint allows you to deposit credits into a user's virtual balance.
-        This is only applicable if the paywall is configured in "default" mode.
-        Deposits will increase the user's balance, allowing them to make requests against the paywall.
-      tags:
-        - User
-      parameters:
-        - $ref: '#/components/parameters/XPaywallUser'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                amount:
-                  type: string
-                  description: The amount to deposit into the user's balance.
-                user:
-                  type: string
-                  description: The unique identifier of the user to deposit credits for.
-                metadata:
-                  type: object
-                  description: Optional metadata to associate with the deposit.
-      responses:
-        200:
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  balanceFormatted:
-                    type: string
-                    description: The user's current credits balance.
-components:
-  parameters:
-    XPaywallUser:
-      name: X-Paywall-User
-      in: header
-      required: false
-      schema:
-        type: string
-      description: |
-        Optional user identifier provided by the developer.
-        Can be used instead of the `user` property in the request body to associate the API call with a specific end user.
-  schemas:
-    ConnectedUser:
-      type: object
-      description: |
-        Information about a user who has successfully connected to a paywall.
-        Includes internal and external user identifiers and the associated paywall key.
-      properties:
-        paywallKeyId:
-          type: string
-          description: Unique identifier of the paywall configuration the user is connected to.
-        userId:
-          type: string
-          description: Internal identifier used by Paywalls.ai to represent the user.
-        externalUserId:
-          type: string
-          description: Identifier supplied by the developer to track their own users.
-        createdAt:
-          type: string
-          format: date-time
-          description: ISO 8601 timestamp indicating when the user was connected to the paywall.
-
-    MessageRole:
-      type: string
-      description: The role of the message author in the conversation.
-      enum: ['system', 'user', 'assistant']
-
-    Message:
-      type: object
-      description: A single message exchanged in a chat conversation.
-      properties:
-        role:
-          $ref: '#/components/schemas/MessageRole'
-        content:
-          type: string
-          description: The text content of the message.
-        name:
-          type: string
-          pattern: '^[a-zA-Z0-9_]{1,64}$'
-          description: |
-            Optional name of the message author (e.g. function or tool name).
-            Can contain letters, numbers, and underscores; max length is 64 characters.
-
-    Model:
-      type: object
-      description: Metadata for a supported LLM model available through the proxy.
-      properties:
-        id:
-          type: string
-          description: Unique model identifier (e.g., gpt-3.5-turbo).
-        object:
-          type: string
-          description: Type of the returned object. Typically \"model\".
-        name:
-          type: string
-          description: Short internal name of the model.
-        display_name:
-          type: string
-          description: Human-readable name of the model, suitable for UI use.
-        description:
-          type: string
-          description: Short summary of the model’s capabilities or intended use case.
-        pricing:
-          $ref: '#/components/schemas/ModelPricing'
-
-    ModelPricing:
-      type: object
-      description: |
-        Cost configuration for a specific model, used to calculate charges for each request.
-      properties:
-        prompt:
-          type: string
-          description: Cost per 1 million prompt tokens (as a stringified decimal).
-        completion:
-          type: string
-          description: Cost per 1 million completion tokens (as a stringified decimal).
-        request:
-          type: string
-          description: Flat fee per request, in USDC or equivalent.
-
-    UserConnectedResponse:
-      type: object
-      description: |
-        Response structure when a user is connected and authorized to be charged via the paywall.
-      properties:
-        connected:
-          type: boolean
-          description: Boolean indicating that the user is connected and authorized.
-        connectedUser:
-          $ref: '#/components/schemas/ConnectedUser'
-        message:
-          type: string
-          description: Human-readable message confirming the connection status.
-      example:
-        connected: true
-        connectedUser:
-          paywallKeyId: 'paywall_123'
-          userId: 'user_456'
-          externalUserId: 'ext_user_789'
-          createdAt: '2023-10-01T12:00:00Z'
-        message: 'User is connected to the paywall.'
-
-    UserNotConnectedResponse:
-      type: object
-      description: |
-        Response structure when the user is not connected to the paywall.
-        A connection link is provided so the user can authorize charges.
-      properties:
-        connected:
-          type: boolean
-          description: Always false in this response type.
-        message:
-          type: string
-          description: Human-readable message explaining the user is not connected.
-        url:
-          type: string
-          description: URL the user can visit to connect and authorize future charges.
-      example:
-        connected: false
-        message: 'User is not connected to the paywall.'
-        url: 'https://paywalls.ai/connect?...'
-  securitySchemes:
-    ApiKeyAuth:
-      type: http
-      scheme: bearer
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Paywalls.ai API",
+    "description": "The Paywalls.ai API enables developers to integrate monetization and access control for OpenAI-compatible LLMs.\n\nThis proxy service supports multiple pricing strategies—including per-request, token-based, and subscription models—while maintaining full compatibility with the OpenAI API format.\n\nRequests are automatically checked for user authorization and balance. If the user is not connected to the paywall, or lacks sufficient balance, the API will return actionable links for onboarding or top-up.\n\nUse this API to monetize your AI-powered apps and services with minimal effort.\n\nVisit [paywalls.ai](https://docs.paywalls.ai) for full documentation and setup guides.\n",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.paywalls.ai/v1",
+      "description": "Primary production server"
+    },
+    {
+      "url": "https://aventino-staging.grindery.com/api/v1",
+      "description": "Staging server for development and testing"
+    }
+  ],
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Chat",
+      "description": "OpenAI-compatible chat completion endpoint that enforces paywall logic before proxying the request to a model provider.\n\nAutomatically checks user connection, balance, and performs charging. Supports streaming and non-streaming completions.\n"
+    },
+    {
+      "name": "Models",
+      "description": "Retrieve metadata and pricing information about the LLM models supported by the proxy.\n\nIncludes prompt and completion pricing, per-request costs, and display details for UI integration.\n"
+    },
+    {
+      "name": "User",
+      "description": "Endpoints for managing user sessions, balance, and charging status.\n\nIncludes functionality for connecting to or disconnecting from the paywall, checking balance, initiating top-ups, and issuing manual charges.\n"
+    }
+  ],
+  "paths": {
+    "/chat/completions": {
+      "post": {
+        "summary": "Proxy a chat completion request with automatic paywall enforcement",
+        "description": "This endpoint proxies an OpenAI-compatible chat completion request and charges the user based on the configured monetization model (per request, per token, etc).\n\nIf the user is not connected to the paywall, the response will contain a connection link.\n\nIf the user is connected but has insufficient balance, a top-up link is returned.\n\nOn success, the request is forwarded to the underlying model provider and the result is returned.\n",
+        "tags": ["Chat"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XPaywallUser"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "description": "The model to use for generating the response."
+                  },
+                  "messages": {
+                    "type": "array",
+                    "description": "A list of messages that make up the conversation.",
+                    "items": {
+                      "$ref": "#/components/schemas/Message"
+                    },
+                    "minItems": 1
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "The unique identifier of the user making the request."
+                  },
+                  "stream": {
+                    "type": "boolean",
+                    "description": "Whether to stream the response back to the client.",
+                    "default": false
+                  }
+                },
+                "required": ["model", "messages"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "chatcmpl-123",
+                      "description": "The completion identifier."
+                    },
+                    "object": {
+                      "type": "string",
+                      "example": "chat.completion",
+                      "description": "The type of the returned object."
+                    },
+                    "created": {
+                      "type": "integer",
+                      "example": 1677652288,
+                      "description": "The creation timestamp of the completion."
+                    },
+                    "choices": {
+                      "type": "array",
+                      "description": "The list of choices returned by the model.",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "index": {
+                            "type": "integer",
+                            "example": 0,
+                            "description": "The index of the choice in the list."
+                          },
+                          "message": {
+                            "$ref": "#/components/schemas/Message"
+                          },
+                          "finish_reason": {
+                            "type": "string",
+                            "example": "stop",
+                            "description": "The reason why the model stopped generating further tokens."
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/models": {
+      "get": {
+        "summary": "Retrieve available LLM models",
+        "description": "Lists all models available through the proxy, including pricing information per model.\n\nUseful for frontend model selectors or pricing calculators.\n",
+        "tags": ["Models"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XPaywallUser"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "description": "A list of available models.",
+                      "items": {
+                        "$ref": "#/components/schemas/Model"
+                      }
+                    }
+                  },
+                  "required": ["data"],
+                  "example": {
+                    "data": [
+                      {
+                        "id": "gpt-3.5-turbo",
+                        "object": "model",
+                        "name": "gpt-3.5-turbo",
+                        "display_name": "GPT-3.5 Turbo",
+                        "description": "A powerful language model for various tasks.",
+                        "pricing": {
+                          "prompt": "0.5",
+                          "completion": "1",
+                          "request": "0.01"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/balance": {
+      "get": {
+        "summary": "Retrieve the user’s current balance",
+        "description": "Returns the current prepaid balance for the user, both in raw units and a formatted string.\n\nUse this to determine whether a user can afford new API requests or needs a top-up.\n",
+        "tags": ["User"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XPaywallUser"
+          },
+          {
+            "in": "query",
+            "name": "user",
+            "required": false,
+            "description": "The unique identifier of the user to get balance information for.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "balance": {
+                      "type": "string",
+                      "description": "The current balance of the user, in wei"
+                    },
+                    "balanceFormatted": {
+                      "type": "string",
+                      "description": "The current balance of the user, formatted for display."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/balance/topup": {
+      "get": {
+        "summary": "Get a top-up link for adding user funds",
+        "description": "Returns a link the user can visit to top up their balance. \n\nThis is typically used when a request is rejected due to insufficient funds.\n",
+        "tags": ["User"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XPaywallUser"
+          },
+          {
+            "in": "query",
+            "name": "user",
+            "required": false,
+            "description": "The unique identifier of the user to get top-up link for.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "description": "The URL to redirect the user to for topping up their balance."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/charge": {
+      "post": {
+        "summary": "Manually charge a user for a specific amount",
+        "description": "Charges a specific user an arbitrary amount (in USDC equivalent), if the user is connected and has sufficient balance.\n\nThis can be used for non-standard billing scenarios such as one-time feature unlocks or external usage tracking.\n",
+        "tags": ["User"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XPaywallUser"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "amount": {
+                    "type": "string",
+                    "description": "The amount to charge the user, in usdc."
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "The unique identifier of the user to charge."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Indicates whether the charge was successful."
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "A message indicating the result of the charge operation."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/connect": {
+      "get": {
+        "summary": "Check user connection status to the paywall",
+        "description": "Checks whether a user is currently connected (i.e., has authorized charging).\n\nIf not connected, a `url` field will be returned to redirect the user to the connection flow (e.g., a consent or wallet approval page).\n",
+        "tags": ["User"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XPaywallUser"
+          },
+          {
+            "in": "query",
+            "name": "user",
+            "required": false,
+            "description": "The unique identifier of the user to check connection status for.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User is connected to the paywall.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/UserConnectedResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/UserNotConnectedResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/disconnect": {
+      "get": {
+        "summary": "Disconnect the user from the paywall",
+        "description": "Revokes the user’s charging authorization and disconnects them from the paywall.\n\nAfter this, any charge or request requiring payment will return a connection link instead of proceeding.\n",
+        "tags": ["User"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XPaywallUser"
+          },
+          {
+            "in": "query",
+            "name": "user",
+            "required": false,
+            "description": "The unique identifier of the user to disconnect from the paywall.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User is disconnected from the paywall.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Indicates whether the disconnection was successful."
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "A message indicating the result of the disconnection operation."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/balance/deposit": {
+      "post": {
+        "summary": "Deposit credits into a user's virtual balance",
+        "description": "This endpoint allows you to deposit credits into a user's virtual balance.\nThis is only applicable if the paywall is configured in \"default\" mode.\nDeposits will increase the user's balance, allowing them to make requests against the paywall.\n",
+        "tags": ["User"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XPaywallUser"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "amount": {
+                    "type": "string",
+                    "description": "The amount to deposit into the user's balance."
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "The unique identifier of the user to deposit credits for."
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "description": "Optional metadata to associate with the deposit."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "balanceFormatted": {
+                      "type": "string",
+                      "description": "The user's current credits balance."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "XPaywallUser": {
+        "name": "X-Paywall-User",
+        "in": "header",
+        "required": false,
+        "schema": {
+          "type": "string"
+        },
+        "description": "Optional user identifier provided by the developer.\nCan be used instead of the `user` property in the request body to associate the API call with a specific end user.\n"
+      }
+    },
+    "schemas": {
+      "ConnectedUser": {
+        "type": "object",
+        "description": "Information about a user who has successfully connected to a paywall.\nIncludes internal and external user identifiers and the associated paywall key.\n",
+        "properties": {
+          "paywallKeyId": {
+            "type": "string",
+            "description": "Unique identifier of the paywall configuration the user is connected to."
+          },
+          "userId": {
+            "type": "string",
+            "description": "Internal identifier used by Paywalls.ai to represent the user."
+          },
+          "externalUserId": {
+            "type": "string",
+            "description": "Identifier supplied by the developer to track their own users."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp indicating when the user was connected to the paywall."
+          }
+        }
+      },
+      "MessageRole": {
+        "type": "string",
+        "description": "The role of the message author in the conversation.",
+        "enum": ["system", "user", "assistant"]
+      },
+      "Message": {
+        "type": "object",
+        "description": "A single message exchanged in a chat conversation.",
+        "properties": {
+          "role": {
+            "$ref": "#/components/schemas/MessageRole"
+          },
+          "content": {
+            "type": "string",
+            "description": "The text content of the message."
+          },
+          "name": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_]{1,64}$",
+            "description": "Optional name of the message author (e.g. function or tool name).\nCan contain letters, numbers, and underscores; max length is 64 characters.\n"
+          }
+        }
+      },
+      "Model": {
+        "type": "object",
+        "description": "Metadata for a supported LLM model available through the proxy.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique model identifier (e.g., gpt-3.5-turbo)."
+          },
+          "object": {
+            "type": "string",
+            "description": "Type of the returned object. Typically \\\"model\\\"."
+          },
+          "name": {
+            "type": "string",
+            "description": "Short internal name of the model."
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Human-readable name of the model, suitable for UI use."
+          },
+          "description": {
+            "type": "string",
+            "description": "Short summary of the model’s capabilities or intended use case."
+          },
+          "pricing": {
+            "$ref": "#/components/schemas/ModelPricing"
+          }
+        }
+      },
+      "ModelPricing": {
+        "type": "object",
+        "description": "Cost configuration for a specific model, used to calculate charges for each request.\n",
+        "properties": {
+          "prompt": {
+            "type": "string",
+            "description": "Cost per 1 million prompt tokens (as a stringified decimal)."
+          },
+          "completion": {
+            "type": "string",
+            "description": "Cost per 1 million completion tokens (as a stringified decimal)."
+          },
+          "request": {
+            "type": "string",
+            "description": "Flat fee per request, in USDC or equivalent."
+          }
+        }
+      },
+      "UserConnectedResponse": {
+        "type": "object",
+        "description": "Response structure when a user is connected and authorized to be charged via the paywall.\n",
+        "properties": {
+          "connected": {
+            "type": "boolean",
+            "description": "Boolean indicating that the user is connected and authorized."
+          },
+          "connectedUser": {
+            "$ref": "#/components/schemas/ConnectedUser"
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable message confirming the connection status."
+          }
+        },
+        "example": {
+          "connected": true,
+          "connectedUser": {
+            "paywallKeyId": "paywall_123",
+            "userId": "user_456",
+            "externalUserId": "ext_user_789",
+            "createdAt": "2023-10-01T12:00:00Z"
+          },
+          "message": "User is connected to the paywall."
+        }
+      },
+      "UserNotConnectedResponse": {
+        "type": "object",
+        "description": "Response structure when the user is not connected to the paywall.\nA connection link is provided so the user can authorize charges.\n",
+        "properties": {
+          "connected": {
+            "type": "boolean",
+            "description": "Always false in this response type."
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable message explaining the user is not connected."
+          },
+          "url": {
+            "type": "string",
+            "description": "URL the user can visit to connect and authorize future charges."
+          }
+        },
+        "example": {
+          "connected": false,
+          "message": "User is not connected to the paywall.",
+          "url": "https://paywalls.ai/connect?..."
+        }
+      }
+    },
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

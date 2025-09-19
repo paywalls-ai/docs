@@ -1,0 +1,217 @@
+---
+title: "Pass user ID"
+description: "How to include user identity in requests to Paywalls.ai."
+---
+
+To process billing and access control, every billable request must include a user identity. This guide shows exactly how to pass it from popular clients and runtimes.
+
+<Warning>
+  Avoid PII in user IDs. Prefer stable, pseudonymous strings (e.g., "user_123").
+  Avoid spaces and special characters.
+</Warning>
+
+## Supported methods
+
+1. Body field `user` — recommended (works with OpenAI‑compatible SDKs)
+2. Header `X-Paywall-User` — easy to inject via middleware/proxy
+3. URL prefix `/{user}/…` — fallback when body/headers cannot be modified
+
+Base URL and auth for all examples:
+
+- Base URL: `https://api.paywalls.ai/v1`
+- Header: `Authorization: Bearer $PAYWALLS_API_KEY`
+
+## Option 1 — Body `user` (recommended)
+
+```bash
+POST /v1/chat/completions
+Authorization: Bearer sk-paywalls-...
+Content-Type: application/json
+
+{
+  "model": "openai/gpt-4o-mini",
+  "messages": [{"role": "user", "content": "Write a haiku about paywalls."}],
+  "user": "user_12345"
+}
+```
+
+## Option 2 — Header `X-Paywall-User`
+
+```bash
+POST /v1/chat/completions
+Authorization: Bearer sk-paywalls-...
+X-Paywall-User: user_12345
+Content-Type: application/json
+```
+
+## Option 3 — URL prefix (fallback)
+
+```bash
+POST https://api.paywalls.ai/v1/user_12345/chat/completions
+Authorization: Bearer sk-paywalls-...
+Content-Type: application/json
+```
+
+<Info>Use the URL prefix only if you cannot modify body/headers.</Info>
+
+## Node (OpenAI SDK)
+
+Body `user`
+
+```ts
+import OpenAI from "openai";
+const client = new OpenAI({
+  apiKey: process.env.PAYWALLS_API_KEY,
+  baseURL: "https://api.paywalls.ai/v1",
+});
+const resp = await client.chat.completions.create({
+  model: "openai/gpt-4o-mini",
+  user: "user_123",
+  messages: [{ role: "user", content: "Write a haiku about paywalls." }],
+});
+```
+
+Header `X-Paywall-User`
+
+```ts
+import OpenAI from "openai";
+const client = new OpenAI({
+  apiKey: process.env.PAYWALLS_API_KEY,
+  baseURL: "https://api.paywalls.ai/v1",
+  defaultHeaders: { "X-Paywall-User": "user_123" },
+});
+const resp = await client.chat.completions.create({
+  model: "openai/gpt-4o-mini",
+  messages: [{ role: "user", content: "Hi!" }],
+});
+```
+
+Streaming
+
+```ts
+const stream = await client.chat.completions.create({
+  model: "openai/gpt-4o-mini",
+  user: "user_123",
+  stream: true,
+  messages: [
+    { role: "user", content: "Explain usage-based pricing in 2 lines." },
+  ],
+});
+for await (const chunk of stream) {
+  const delta = chunk.choices?.[0]?.delta?.content;
+  if (delta) process.stdout.write(delta);
+}
+```
+
+## Python (OpenAI SDK)
+
+```python
+from openai import OpenAI
+import os
+client = OpenAI(api_key=os.environ["PAYWALLS_API_KEY"], base_url="https://api.paywalls.ai/v1")
+resp = client.chat.completions.create(
+    model="openai/gpt-4o-mini",
+    user="user_123",
+    messages=[{"role": "user", "content": "Summarize usage-based billing."}],
+)
+print(resp.choices[0].message.content)
+```
+
+Header variant (if your SDK layer supports default headers):
+
+```python
+client = OpenAI(
+    api_key=os.environ["PAYWALLS_API_KEY"],
+    base_url="https://api.paywalls.ai/v1",
+    default_headers={"X-Paywall-User": "user_123"}
+)
+```
+
+## Vercel AI SDK (Edge)
+
+Body `user`
+
+```ts
+import OpenAI from "openai";
+import { OpenAIStream, StreamingTextResponse } from "ai";
+export const runtime = "edge";
+export async function POST(req: Request) {
+  const { messages } = await req.json();
+  const openai = new OpenAI({
+    apiKey: process.env.PAYWALLS_API_KEY!,
+    baseURL: "https://api.paywalls.ai/v1",
+  });
+  const response = await openai.chat.completions.create({
+    model: "openai/gpt-4o-mini",
+    user: "user_123",
+    stream: true,
+    messages,
+  });
+  return new StreamingTextResponse(OpenAIStream(response));
+}
+```
+
+Header injection
+
+```ts
+const openai = new OpenAI({
+  apiKey: process.env.PAYWALLS_API_KEY!,
+  baseURL: "https://api.paywalls.ai/v1",
+  defaultHeaders: { "X-Paywall-User": "user_123" },
+});
+```
+
+## Fetch / cURL
+
+fetch (header)
+
+```ts
+await fetch("https://api.paywalls.ai/v1/chat/completions", {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${process.env.PAYWALLS_API_KEY}`,
+    "Content-Type": "application/json",
+    "X-Paywall-User": "user_123",
+  },
+  body: JSON.stringify({
+    model: "openai/gpt-4o-mini",
+    messages: [{ role: "user", content: "Hello!" }],
+  }),
+});
+```
+
+cURL (body `user`)
+
+```bash
+curl https://api.paywalls.ai/v1/chat/completions \
+  -H "Authorization: Bearer $PAYWALLS_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model":"openai/gpt-4o-mini",
+    "user":"user_123",
+    "messages":[{"role":"user","content":"Hello!"}]
+  }'
+```
+
+cURL (header)
+
+```bash
+curl https://api.paywalls.ai/v1/chat/completions \
+  -H "Authorization: Bearer $PAYWALLS_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "X-Paywall-User: user_123" \
+  -d '{"model":"openai/gpt-4o-mini","messages":[{"role":"user","content":"Hello!"}]}'
+```
+
+## Behavior summary
+
+On each request Paywalls extracts the user id (body > header > URL), checks authorization and balance, and either:
+
+- Returns an assistant message with an authorization/top‑up link (no charge), or
+- Forwards the request, meters usage, deducts balance, and streams the model response.
+
+## Best practices
+
+- Use body `user` when possible; header is a great middleware fallback.
+- Keep IDs stable across sessions and retries. Avoid PII.
+- Ensure your server/edge passes the user on every billable request.

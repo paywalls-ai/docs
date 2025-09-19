@@ -1,29 +1,75 @@
 ---
 title: "User Identity"
+description: "To process billing and enforce access control, every request to Paywalls.ai must include a user identity."
 ---
 
-Every billable call **must include a stable user id** so we can authorize, meter, and bill the right account.
+Every billable call must include a stable user ID so we can authorize, meter, and bill the right account.
 
-### What we use it for
+## Why it matters
 
-- Authorization & balance checks (Shared: access must be granted; Default: evaluate balance).
-- Per‑user limits (spend caps, token caps, concurrency).
-- Correct ledger attribution and analytics.
+Without knowing which user made a request, we cannot:
 
-### Design a good user id
+- Verify whether they have authorized your paywall
+- Check whether they have enough balance
+- Attribute usage/charges to the right account for the ledger and analytics
 
-- Prefer **pseudonymous**, stable identifiers (e.g., `user_abc123`). Avoid PII (emails/phone numbers).
-- One logical person/device → one stable id across your app(s). If you migrate auth systems, add a mapping layer instead of changing ids in requests.
-- If you must rotate ids, store the old id in your own mapping; continue sending a **stable** id to Paywalls.
+Providing a user id is mandatory for all billable endpoints (e.g., `/chat/completions`, `/user/charge`).
 
-### Where to send it
+## What makes a good user id
 
-1. **Body** `user` _(recommended; works with OpenAI SDKs)_
-2. **Header** `X-Paywall-User` _(easy via middleware)_
-3. **URL prefix** `/{user}/...` _(fallback when you can’t modify body/headers)_
+- Pseudonymous and stable (e.g., `user_abc123`). Avoid PII like emails or phone numbers.
+- One logical person/device → one stable id across sessions and clients.
+- Consistent across all requests; retries should reuse the same id.
+- Unique within your app or tenant.
 
-### Common mistakes
+Note: If your auth system changes, keep a mapping in your app so you can continue sending a stable id to Paywalls.
 
-- Using different ids on different requests for the same person.
+## Scope and tenancy
+
+- Single app: use your internal user id as‑is (pseudonymized if needed).
+- Multi‑tenant/SaaS: consider prefixing with tenant or scoping in your own DB (e.g., `acme:user_123`). Keep it stable.
+- Cross‑app experiences: you may share the same id across your apps if you want a shared wallet/limits; otherwise keep ids app‑scoped.
+
+## Special cases
+
+- Guest sessions: mint a random id at first use and persist it (cookie, device key) so it remains stable.
+- Shared devices: prefer per‑account login; if not possible, include device info in your own mapping but keep the id stable.
+- Service/bot accounts: use a dedicated id; do not reuse human user ids.
+
+## Rotation & migration
+
+- If you must rotate an id, maintain an internal mapping so you keep sending the same effective id to Paywalls.
+- Do not change ids mid‑session; it will fragment balances and analytics.
+
+## Test & staging users
+
+- Clearly label staging/test users (e.g., `test_alice`) so you can filter them in analytics.
+- Never expose real secrets/keys when testing from browsers; use server/edge.
+
+## Format recommendations
+
+- Use URL‑safe ASCII; avoid spaces and special characters.
+- Keep length reasonable (less than 128 chars recommended).
+- Treat as opaque string on our side; you control its semantics.
+
+## Privacy & security
+
+- Prefer pseudonymous ids to reduce risk and compliance burden.
+- Do not include sensitive information in the id or request metadata.
+- See `more/security-compliance.mdx` and `privacy.mdx` for details.
+
+## How to send the user id
+
+There are multiple ways depending on your client and middleware:
+
+- Body field `user` (recommended; works with OpenAI SDKs)
+- Header `X-Paywall-User` (easy to inject via middleware)
+- URL prefix `/{user}/…` (fallback when body/headers cannot be modified)
+
+For concrete examples in Node, Python, cURL, and Vercel AI SDK, see `how-to-guides/pass-user-id.mdx`.
+
+## Common mistakes
+
+- Using different ids for the same person across requests.
 - Sending PII as the id.
-- Omitting the id on streaming retries (breaks metering/charges).
+- Omitting the id on streaming retries.

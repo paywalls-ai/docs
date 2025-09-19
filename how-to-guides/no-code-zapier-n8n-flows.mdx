@@ -2,11 +2,94 @@
 title: "No-code: Zapier, n8n, and other flows"
 ---
 
-Ship a paywalled AI flow with no code by calling the Chat Completions endpoint from your workflow tool. The **assistant message** you get back is what you show to users—no special branching required.
+The easiest way to use Paywalls in no‑code tools is to replace the model provider URL and key in the tool’s built‑in AI nodes. This keeps your flows simple—no custom HTTP calls or branching required. Custom requests are still supported when you need advanced control.
 
-- **Zapier**: Use **Webhooks by Zapier → Custom Request** to call `POST https://api.paywalls.ai/v1/chat/completions` with your headers/body. The returned assistant message may include an **authorization** or **checkout** link—just pass it through to your UI or messaging step.
-- **n8n**: Use the **HTTP Request** node with `Authorization: Bearer <PAYWALLS_API_KEY>` and optional `X-Paywall-User`. Forward the returned assistant message to the next node (chat UI, email, Slack, etc.).
+## Easiest path: swap the base URL
 
-> Tip: Store your `PAYWALLS_API_KEY` as a secret/credential in your no‑code tool; do not hardcode it in workflows.
+Most AI nodes accept an OpenAI‑compatible endpoint. Set:
 
-**TODO:** Official templates & screenshots.
+- Base URL: `https://api.paywalls.ai/v1`
+- API Key: your Paywalls API key (server/secret credential)
+- Model: keep the same model id (e.g., `openai/gpt-4o-mini`) or choose from your configured models
+- User: provide a stable id if the node supports it (body `user` or a header field)
+
+### n8n (Agents / OpenAI nodes)
+
+- Open the AI node (e.g., Agent, Chat Model, OpenAI node).
+- Provider: OpenAI (or OpenAI‑compatible).
+- Advanced/Custom host: set Base URL to `https://api.paywalls.ai/v1`.
+- API Key: set a credential holding your Paywalls key.
+- Model: select your desired model (e.g., `openai/gpt-4o-mini`).
+- Optional: add a stable `user` field if supported to enable per‑user metering.
+
+Result: Paywalls handles pricing, metering, and authorization automatically. If the user must authorize or top up, the model’s assistant message will include a link—just pass the reply through your flow.
+
+### Zapier (AI Actions / AI by Zapier)
+
+- In an AI step that supports an OpenAI‑compatible provider, set Base URL to `https://api.paywalls.ai/v1`.
+- Use your Paywalls API key as the credential.
+- Keep the rest of your prompt/chain as‑is.
+
+## Alternative: Custom HTTP request (when needed)
+
+If your tool or step doesn’t expose model settings, call the Chat Completions API directly.
+
+- URL: `POST https://api.paywalls.ai/v1/chat/completions`
+- Headers: `Authorization: Bearer <PAYWALLS_API_KEY>`, `Content-Type: application/json`
+- Optional: `X-Paywall-User: <user_id>` if you can’t put `user` in the body
+- Body: `{ model, user, messages, stream? }`
+
+Behavior: If authorization/top‑up is required, you’ll still receive a normal assistant message with the correct link. Show it as the response in your UI or next step—no special branching needed.
+
+## Advanced: custom payments and manual charges
+
+For more complex flows (your own checkout, per‑tool fees, post‑processing charges), call these endpoints directly from your no‑code tool:
+
+- Deposit credits (credit a user after your checkout succeeds): `POST https://api.paywalls.ai/v1/user/balance/deposit`
+- Charge user (manual one‑off debit for actions outside token metering): `POST https://api.paywalls.ai/v1/user/charge`
+
+Headers
+
+- `Authorization: Bearer <PAYWALLS_API_KEY>`
+- `Content-Type: application/json`
+- `Idempotency-Key: <stable-request-id>` (strongly recommended)
+
+Typical JSON body
+
+- `user`: stable pseudonymous user id
+- `amount`: string value in your configured currency (e.g., "1.50")
+- `metadata`: optional JSON with your payment reference (`payment_intent`, `checkout_session`, internal ids)
+
+Zapier (Webhooks → Custom Request)
+
+- Method: POST
+- URL: one of the endpoints above
+- Data: JSON with `user`, `amount`, `metadata`
+- Headers: add the three headers listed above
+
+n8n (HTTP Request)
+
+- Method: POST
+- URL: one of the endpoints above
+- Send: JSON
+- Body: `user`, `amount`, optional `metadata`
+- Headers: add the three headers listed above
+
+Behavior notes
+
+- Default mode: use Deposit after your own payment succeeds; makes the balance available for future usage charges.
+- Shared mode: `POST /user/charge` may return `success: false` with an assistant message containing an authorization or top‑up link—forward that message to your user.
+- Always reuse the same Idempotency‑Key when retrying to prevent duplicate deposits/charges.
+
+API reference
+
+- Deposit: `api-reference/user/balance/deposit/post.mdx`
+- Charge: `api-reference/user/charge/post.mdx`
+
+## Tips
+
+- Store `PAYWALLS_API_KEY` as a secret/credential inside your tool; never hardcode in steps.
+- Always pass a stable pseudonymous `user` to get accurate per‑user balances and analytics.
+- Use Shared mode for zero‑setup launches; switch to Default mode with Stripe when you want direct capture.
+
+**Coming soon:** official templates and screenshots for n8n and Zapier.

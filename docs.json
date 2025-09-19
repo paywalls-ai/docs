@@ -27,8 +27,8 @@
               "core-concepts/user-identity",
               "core-concepts/pricing-metering",
               "core-concepts/request-lifecycle",
-              "core-concepts/model-providers",
-              "core-concepts/proxy"
+              "core-concepts/proxy",
+              "core-concepts/model-providers"
             ]
           },
           {
@@ -91,8 +91,7 @@
               "api-reference/user/balance/topup/get",
               "api-reference/user/charge/post",
               "api-reference/user/connect/get",
-              "api-reference/user/disconnect/get",
-              "api-reference/user/menu/get"
+              "api-reference/user/disconnect/get"
             ]
           }
         ]

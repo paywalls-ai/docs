@@ -2,7 +2,17 @@
 title: "Monetize MCP Tools"
 ---
 
-Use **manual charges** after/around tool calls:
+Monetize MCP tools by charging per tool invocation. You don’t need to build custom UI—if authorization or funding is required, return the assistant message you get from Paywalls so the client can show the link.
+
+## How it works
+
+1. Your MCP server receives a tool call (with inputs).
+2. Compute the price for this tool run (flat fee or dynamic).
+3. Call `POST /v1/user/charge` with a stable `user` and an `Idempotency-Key` tied to the tool run.
+4. If `success: true` → perform the tool’s action and return result.
+5. If `success: false` → return the provided `message` verbatim (it already contains the auth/top‑up link).
+
+## Quick snippet (manual charge around a tool call)
 
 ```ts
 import axios from "axios";
@@ -19,3 +29,72 @@ await axios.post(
 ```
 
 On `{ success: false, message }`, render the message verbatim (it already contains auth/top‑up UI).
+
+## Pricing patterns
+
+- Flat per‑call: e.g., $0.05 per web search, $0.25 per PDF parse.
+- Tiered by tool: cheap for simple actions; premium for heavy tools.
+- Free allowance + cap: no charge for N runs/day, then charge thereafter.
+- Hybrid: combine per‑tool fee with token metering if your tool also calls models.
+
+Tip: Include `{ tool, runId, requestId }` in `metadata` to power analytics.
+
+## Choosing a mode
+
+- Shared mode (fastest): hosted top‑ups; paywall messages include links automatically. Great for public tools and zero‑setup trials.
+- Default mode: your own Stripe/custom rails. Credit users via `POST /user/balance/deposit` after your checkout succeeds.
+
+## Implementation pattern (Node MCP server)
+
+```ts
+// Pseudocode: wrap a tool handler with a paywall charge
+async function runWithCharge({ user, amount, toolKey, runId }, fn) {
+  const chargeRes = await fetch("https://api.paywalls.ai/v1/user/charge", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.PAYWALLS_API_KEY}`,
+      "Content-Type": "application/json",
+      "Idempotency-Key": runId,
+    },
+    body: JSON.stringify({ user, amount, metadata: { tool: toolKey, runId } }),
+  });
+  const json = await chargeRes.json();
+  if (!json.success) {
+    // Return the assistant message so the MCP client can show it
+    return { kind: "text", text: json.message };
+  }
+  // Proceed with the actual tool
+  const result = await fn();
+  return { kind: "text", text: result };
+}
+```
+
+Notes
+
+- Use a stable `runId` (e.g., hash of tool name + timestamp + inputs) for the `Idempotency-Key` so retries do not double‑charge.
+- If your tool also calls an LLM, set your client’s `baseURL` to `https://api.paywalls.ai/v1` so token usage is metered automatically; the manual charge layers on top.
+
+## Identifying the user
+
+- Provide a stable, pseudonymous `user` per end‑user. Options:
+  - Require sign‑in to your service and use your internal user id.
+  - Derive a pseudonymous id from the MCP client’s connection/session if available and persist it server‑side.
+- If you can’t include `user` in body, send `X‑Paywall‑User` header.
+
+## Handling insufficient funds
+
+- Do not build special UI. When Paywalls returns `success: false` with a `message`, return that message as the tool output.
+- The message contains the correct authorization or top‑up link for the user.
+
+## Advanced flows
+
+- Prepaid/subscriptions: In Default mode, credit accounts after payment using `POST /v1/user/balance/deposit` (idempotent). Use manual charges for non‑tokenized actions.
+- Spend caps: Keep a per‑user daily counter in your server; skip the tool or choose a cheaper variant when the cap is reached.
+
+## Links
+
+- Manual charge: `api-reference/user/charge/post.mdx`
+- Deposit credits: `api-reference/user/balance/deposit/post.mdx`
+- Pricing & metering: `core-concepts/pricing-metering.mdx`
+- Errors, retries, idempotency: `more/errors-limits-reliability.mdx`
+- No‑code alternative: `how-to-guides/no-code-zapier-n8n-flows.mdx`

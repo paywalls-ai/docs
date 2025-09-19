@@ -4,7 +4,7 @@ title: "Configure Billing"
 
 Design billing that matches AI usage and preserves your margins. You can change pricing and rules in the dashboard at any time without touching your app code. You can use **one** method or **combine** them.
 
-### 1) Deposit credits via **Deposit API** _(Default mode only)_
+### 1. Deposit credits via **Deposit API** _(Default mode only)_
 
 **What it does:** Credit a user’s **app‑scoped** wallet with an arbitrary amount.
 
@@ -20,7 +20,7 @@ Design billing that matches AI usage and preserves your margins. You can change 
 - Works only in **Default mode** (virtual, app‑scoped balance).
 - Pair with the automated **Stripe restricted key** setup for a zero‑code top‑up flow.
 
-### 2) One‑off charges via **Charge API** _(Both modes)_
+### 2. One‑off charges via **Charge API** _(Both modes)_
 
 **What it does:** Create a **manual, one‑time charge** independent of token usage.
 
@@ -36,7 +36,7 @@ Design billing that matches AI usage and preserves your margins. You can change 
 - If funds/authorization are missing, the API returns a **renderable message** (auth/top‑up link); show it as a normal assistant reply.
 - Use an **Idempotency‑Key** to avoid duplicates; include **metadata** for reconciliation.
 
-### 3) Automatic usage billing via the **Proxy** _(Both modes)_
+### 3. Automatic usage billing via the **Proxy** _(Both modes)_
 
 **What it does:** The proxy **meters tokens** and computes the charge from the **selected model price** + your **markup**. It writes the charge to the ledger and returns the model response (or an auth/top‑up message) — no custom billing code required.
 
@@ -51,7 +51,7 @@ Design billing that matches AI usage and preserves your margins. You can change 
 - Per‑model pricing lets users pick price/performance while you keep margins predictable.
 - Changes take effect **without code changes**.
 
-### 4) Per‑request & hybrid pricing _(Coming soon)_
+### 4. Per‑request & hybrid pricing _(Coming soon)_
 
 Configure fixed **per‑request** fees, or **hybrid** pricing: _minimum fee per request + per‑token usage_. Useful for short prompts, tools/actions, and stabilizing margins across mixed workloads.
 

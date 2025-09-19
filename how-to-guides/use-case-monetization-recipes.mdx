@@ -2,8 +2,156 @@
 title: "Use case (monetization) recipes"
 ---
 
-- Per‑token metering with minimum fee for chat.
-- Charge per tool call with daily **spend cap**.
-- Freemium trial → prepaid top‑ups → subscription + overage.
-- Multi‑agent app with per‑model pricing.
-  **TODO:** Full examples & starter snippets.
+Choose a pricing pattern that matches your product and audience. All recipes assume you:
+
+- Send a stable, pseudonymous `user` on every billable request.
+- Use idempotency for non‑idempotent POSTs.
+- Let the proxy return renderable assistant messages for auth/top‑ups (no special branching).
+
+See background: `core-concepts/pricing-metering.mdx`, `core-concepts/paywalls-wallets-ledger.mdx`, `more/errors-limits-reliability.mdx`.
+
+## Per‑token metering (chat)
+
+When to use
+
+- General chat UX where prompts vary widely and you need margin predictability.
+
+How it works
+
+- Configure per‑model prices for prompt/completion tokens plus your desired markup.
+- Charge = token_cost × markup.
+
+Steps
+
+- In the dashboard, set model pricing.
+- Use the Chat Completions endpoint normally; metering finalizes at end of stream.
+
+Minimal request
+
+```bash
+curl <https://api.paywalls.ai/v1/chat/completions> \\
+  -H "Authorization: Bearer $PAYWALLS_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "model": "openai/gpt-4o-mini",
+    "user": "user_123",
+    "messages": [{"role":"user","content":"Help me draft a tweet."}]
+  }'
+
+```
+
+## Charge per tool call
+
+When to use
+
+- Tools (e.g., web browse, RAG search, PDF parse) where value isn’t well expressed in tokens.
+
+Pattern
+
+- Combine automatic chat metering with a flat, manual charge per tool call.
+
+Endpoints
+
+- Manual charge: `POST /v1/user/charge`
+- Optional balance check (display): `GET /v1/user/balance`
+
+Flow
+
+1. Before executing the tool, check user’s balance (optional).
+2. If balance is enough, perform the tool action. On success, call `POST /user/charge` with an idempotency key (e.g., the tool run id).
+3. If `success: false`, render the assistant message (auth/top‑up link) and stop the tool.
+
+Example charge
+
+```bash
+curl -X POST <https://api.paywalls.ai/v1/user/charge> \\
+  -H "Authorization: Bearer $PAYWALLS_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -H "Idempotency-Key: run_123" \\
+  -d '{
+    "user": "user_123",
+    "amount": "0.25",
+    "metadata": {"tool": "web_search", "runId": "run_123"}
+  }'
+
+```
+
+Tips
+
+- Charge after your tool succeeds to avoid refunds/adjustments.
+- If you must pre‑authorize, use a small charge first, then a second charge on completion.
+
+## Freemium → prepaid top‑ups → subscription + overage
+
+Goal
+
+- Smooth path from zero‑friction trial to predictable recurring revenue, with fair overages.
+
+Today (implemented with existing APIs)
+
+- Freemium: grant trial credits by calling `POST /v1/user/balance/deposit` from your backend when a new user onboards (label as `trial` in metadata).
+- Prepaid: in Default mode use Stripe to sell credits; after payment success, call Deposit. In Shared mode, hosted top‑ups handle funding automatically.
+- Overage: normal metering and/or manual charges apply once credits are used.
+
+Upcoming
+
+- Native subscriptions (alongside usage) are on the roadmap; for now, trigger periodic deposits from your billing system.
+
+Example trial deposit
+
+```bash
+curl -X POST <https://api.paywalls.ai/v1/user/balance/deposit> \\
+  -H "Authorization: Bearer $PAYWALLS_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -H "Idempotency-Key: signup_user_123" \\
+  -d '{
+    "user": "user_123",
+    "amount": "2.00",
+    "metadata": {"reason": "trial", "plan": "starter"}
+  }'
+
+```
+
+Tips
+
+- Show remaining credits and estimated cost per action to improve conversion.
+- For subscriptions, align the deposit amount with the monthly entitlement; Allow to top up once the balance hits zero.
+
+## Multi‑agent app with per‑model pricing
+
+When to use
+
+- Multi‑tool/agent systems where some actions require premium models while others run fine on small models.
+
+Pattern
+
+- Map each agent to a model id (and price). Expose the model tier in UI so users understand cost/performance.
+- Apply guardrails: if balance is low, fall back to a cheaper model or pause premium agents.
+
+Example selection logic (pseudocode)
+
+```tsx
+const budgetLow = user.balance < 1.0;
+const model = budgetLow ? "openai/gpt-4o-mini" : "openai/gpt-4o";
+const res = await client.chat.completions.create({ model, user, messages });
+```
+
+Operational notes
+
+- Keep agent → model mapping centralized so analytics can attribute cost/revenue per agent.
+- Consider a small per‑request minimum fee for premium agents to stabilize margins.
+
+## Guardrails & UX patterns
+
+- Idempotency: use `Idempotency-Key` for all manual charges/deposits.
+- Messaging: always render the assistant message when a request is blocked for auth/top‑up—no custom UI needed.
+- Analytics: label `metadata` with `requestId`, `tool`, and `agent` for clear reporting.
+
+## Links
+
+- Deposit credits: `api-reference/user/balance/deposit/post.mdx`
+- Manual charge: `api-reference/user/charge/post.mdx`
+- Balance: `api-reference/user/balance/get.mdx`
+- Choose a mode: `how-to-guides/choose-a-mode.mdx`
+- Configure billing: `how-to-guides/configure-billing.mdx`
+- No‑code flows: `how-to-guides/no-code-zapier-n8n-flows.mdx`

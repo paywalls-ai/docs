@@ -11,18 +11,6 @@ You can keep your **existing subscription plans** (e.g., monthly tiers in Stripe
 
 > This guide targets **Default mode** (app‑scoped wallet). In **Shared mode**, the wallet is user‑controlled and external deposit grants aren’t supported yet. You can still run subscriptions for access/entitlements while usage is billed from the shared wallet.
 
-### Map plans → credit grants
-
-Create a table that maps subscription **tiers** to the **credit amount** you want to deposit each cycle, for example:
-
-| Plan    | Monthly price |  Monthly credits |
-| ------- | ------------: | ---------------: |
-| Starter |           \$9 |    90,000 tokens |
-| Pro     |          \$29 |   400,000 tokens |
-| Team    |          \$99 | 2,000,000 tokens |
-
-> Choose units that match your pricing (**tokens**, **requests**, or **hybrid**). You can change the mapping any time; the next cycle uses the new amounts.
-
 ### Event to listen for (Stripe)
 
 Listen for the subscription invoice being **paid** and only then grant credits:
