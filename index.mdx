@@ -4,44 +4,69 @@ description: "Paywalls.ai is an AI‑first monetization platform for no‑code b
 icon: "book-open"
 ---
 
-It’s not just another billing tool—it’s purpose‑built for AI apps, agents, and automations. Today it provides an OpenAI‑compatible chat completions proxy with real‑time metering, dynamic pricing, billing and payment integrations; next, it’s expanding to images, audio, video, embeddings, MCP tools, agent‑to‑agent payments and more.
+<Note>
+  Build AI products, not a billing system. You focus on UX and features;
+  Paywalls handles pricing, metering, and getting paid.
+</Note>
 
-**Build AI products, not a billing system.** You focus on your product; we handle the hard parts of **pricing, metering, and getting paid**.
+It’s not just another billing tool—it’s purpose‑built for AI apps, agents, and automations. Today it provides an OpenAI‑compatible Chat Completions proxy with real‑time metering, dynamic pricing, billing, and payment integrations; next, it’s expanding to images, audio, video, embeddings, MCP tools, agent‑to‑agent payments, and more.
 
-### What you get (at a glance)
+## What you get (at a glance)
 
-- **Monetization in minutes, not months** — launch with a working checkout, and usage metering instead of building billing, reconciliation, and reporting from scratch.
-- **Dynamic, AI‑native pricing** — price per request, per token, or hybrid; set different rates per model or feature; run promos or free/trial credits without code changes.
-- **Instant paywalls** — block unpaid usage and surface prebuilt **authorize/top‑up** experiences exactly when needed so you stop leaking value.
-- **Wallets that fit your go‑to‑market** — pick **Default (app‑scoped)** balances for a tightly controlled UX or **Shared (cross‑app)** balances when you want users to top up once and spend across apps.
-- **Provider‑agnostic control** — standardize pricing across OpenAI/Anthropic/other providers and keep margins stable even as model menus and rates evolve.
-- **A real ledger** — every top‑up and charge is recorded for exports, audits, and analytics.
+- Monetization in minutes — launch with working checkout and usage metering without building billing, reconciliation, and reporting.
+- Dynamic, AI‑native pricing — per request, per token, or hybrid; per‑model rates; promos and trial credits.
+- Instant paywalls — block unpaid usage and surface prebuilt authorize/top‑up links exactly when needed.
+- In-app credits — choose Default (app‑scoped) or Shared (cross‑app) balances.
+- A real ledger — every top‑up and charge recorded for exports, audit, and analytics.
 
-### Why this matters
+## Why this matters
 
-- **AI usage is spiky and granular.** Prices differ by model, input/output tokens, and even capability tiers. Rolling your own metering and price logic is slow, brittle, and distracts from shipping features. Paywalls.ai gives you a **purpose‑built, usage‑based foundation** that matches how AI is actually billed.
-- **Pricing changes often.** You’ll want to experiment (e.g., minimum fee + per‑token, per‑tool charges, trials, bundles). With Paywalls.ai, you can **iterate pricing without refactoring** your app.
-- **Cash flow and guardrails.** Built‑in balance checks and spend controls stop runaway costs, while a clear ledger makes finance and support easier.
+- AI usage is spiky and granular. Prices differ by model, input/output tokens, and capability tiers. Paywalls gives you a usage‑based foundation that matches how AI is billed.
+- You’ll iterate pricing. Experiment with minimum fee + per‑token, per‑tool charges, trials, and bundles — without refactoring your app.
+- Guardrails + cash flow. Built‑in balance checks and spend controls stop runaway costs; a clear ledger helps finance and support.
 
-### Common outcomes for builders
+## Common outcomes for builders
 
-- **Launch paid v1 fast:** gate AI usage behind a paywall and start charging in minutes — no custom billing stack.
-- **Freemium that converts:** give, for example, **100 free messages** or **\$5 in trial credits**, then automatically prompt for top‑ups or route to a subscription.
-- **Predictable margins:** enforce a **minimum fee** plus **per‑token** pricing per model; change rates centrally without code changes.
-- **Per‑model dynamic pricing:** let users pick a model and automatically apply the right rate while protecting margins across providers.
-- **Scale from no‑code to prod:** start with no‑code tools like Zapier/n8n; graduate to Node/Python/Edge using the same paywall settings.
+- Launch paid apps fast — gate AI usage and start charging in minutes.
+- Freemium that converts — e.g., 100 free messages or $5 in trial credits, then prompt for top‑ups or subscription.
+- Predictable margins — enforce a minimum fee plus per‑token per model; change rates centrally.
+- Per‑model dynamic pricing — users pick a model; you apply the right rate while protecting margins.
+- Scale from no‑code to prod — start in Zapier/n8n; graduate to Node/Python/Edge using the same paywall settings.
 
-### What Paywalls.ai replaces
+## What Paywalls replaces
 
-- **Metering hacks:** ad‑hoc token counters, cron jobs, and spreadsheet‑driven charge calculations.
-- **Patchwork payments:** one‑off Stripe calls/webhooks scattered across services; manual reconciliation.
-- **DIY ledgers:** custom tables/scripts for balances, top‑ups, refunds, and disputes.
-- **Inconsistent paywalls:** scattered “pay now” modals and error messages that don’t reflect real balance/authorization state.
+- Metering hacks — ad‑hoc token counters and cron jobs.
+- Patchwork payments — scattered Stripe calls/webhooks; manual reconciliation.
+- DIY ledgers — custom tables/scripts for balances, top‑ups, refunds.
+- Inconsistent paywalls — error messages that don’t reflect real auth/balance state.
 
-### What stays yours
+## What stays yours
 
-- Your product experience, data flows, and model choices.
-- Your pricing strategy — Paywalls.ai makes it easy to implement and change.
+- Your product experience, UI, data flows, and model choices.
+- Your pricing strategy — Paywalls makes it easy to implement and change.
 
-**Next steps**
-Head to **Quickstart** to make your first paid request. When you’re ready to go deeper, see **Core concepts** for paywall modes, user identity, and pricing, then explore **How‑to guides** for Stripe, model providers, MCP charges, and no‑code flows.
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Quickstart" href="quickstart" icon="rocket">
+    Make your first paid request in minutes.
+  </Card>
+  <Card
+    title="Connect Stripe"
+    href="how-to-guides/connect-stripe"
+    icon="credit-card"
+  >
+    Collect payments to your Stripe account.
+  </Card>
+
+  <Card title="SDKs" href="sdk-integrations/client-sdks" icon="code">
+    Use official OpenAI and other SDKs by changing baseURL.
+  </Card>
+  <Card
+    title="API reference"
+    href="api-reference/introduction"
+    icon="book-open"
+  >
+    Endpoint details, parameters, and examples.
+  </Card>
+</Columns>

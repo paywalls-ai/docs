@@ -4,6 +4,12 @@ title: "Proxy"
 
 The **proxy** is the drop‑in, OpenAI‑compatible layer that **enforces pricing and authorization**, **meters usage**, and **returns paywall‑aware assistant messages**. It dramatically simplifies setup because you **don’t need to build billing branches** in your app.
 
+<Note>
+  **Optional but recommended:** You can call Paywalls APIs directly for non‑chat
+  features (e.g., manual charges). For chat usage, the proxy gives you the
+  fastest path to a working, billable flow without custom billing code.
+</Note>
+
 ### Why use the proxy?
 
 - **Zero‑branching UX** — When a user must authorize or top up, the proxy replies with a **normal assistant message** containing the correct link. You just render what you get.
@@ -29,6 +35,10 @@ The **proxy** is the drop‑in, OpenAI‑compatible layer that **enforces pricin
 ### Performance & limits
 
 - Streaming is proxied with minimal overhead; if a stream drops, clients may reconnect and retry safely.
-- Rate limits and concurrency caps protect your app and budget. _(TODO: publish exact limits.)_
+- Rate limits and concurrency caps protect your app and budget. _(soon)_
 
-> **Optional but recommended:** You can call Paywalls APIs directly for non‑chat features (e.g., manual charges). For chat usage, the proxy gives you the fastest path to a working, billable flow without custom billing code.
+<Card title="Model providers" href="/how-to-guides/byok-vs-built-in-provider" icon="cpu">
+
+BYOK vs Built-in Provider
+
+</Card>

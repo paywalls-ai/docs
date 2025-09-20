@@ -13,7 +13,10 @@ Without knowing which user made a request, we cannot:
 - Check whether they have enough balance
 - Attribute usage/charges to the right account for the ledger and analytics
 
-Providing a user id is mandatory for all billable endpoints (e.g., `/chat/completions`, `/user/charge`).
+<Warning>
+  Providing a user id is mandatory for all billable endpoints (e.g.,
+  `/chat/completions`, `/user/charge`).
+</Warning>
 
 ## What makes a good user id
 
@@ -22,7 +25,10 @@ Providing a user id is mandatory for all billable endpoints (e.g., `/chat/comple
 - Consistent across all requests; retries should reuse the same id.
 - Unique within your app or tenant.
 
-Note: If your auth system changes, keep a mapping in your app so you can continue sending a stable id to Paywalls.
+<Note>
+  If your auth system changes, keep a mapping in your app so you can continue
+  sending a stable id to Paywalls.
+</Note>
 
 ## Scope and tenancy
 
@@ -56,7 +62,7 @@ Note: If your auth system changes, keep a mapping in your app so you can continu
 
 - Prefer pseudonymous ids to reduce risk and compliance burden.
 - Do not include sensitive information in the id or request metadata.
-- See `more/security-compliance.mdx` and `privacy.mdx` for details.
+- See (Security Compliance)[/more/security-compliance] and (Privacy)[/privacy] for details.
 
 ## How to send the user id
 
@@ -66,7 +72,10 @@ There are multiple ways depending on your client and middleware:
 - Header `X-Paywall-User` (easy to inject via middleware)
 - URL prefix `/{user}/…` (fallback when body/headers cannot be modified)
 
-For concrete examples in Node, Python, cURL, and Vercel AI SDK, see `how-to-guides/pass-user-id.mdx`.
+<Note>
+  For concrete examples see [How to pass user ID](how-to-guides/pass-user-id)
+  guide.
+</Note>
 
 ## Common mistakes
 

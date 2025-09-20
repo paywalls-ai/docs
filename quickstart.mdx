@@ -3,75 +3,113 @@ title: "Quickstart"
 icon: "rocket"
 ---
 
-### Step 1 — Create a paywall & choose mode (immutable)
+<Note>
+  Swap your OpenAI client base URL and key, include a stable user id, and you
+  can charge for usage in minutes.
+</Note>
 
-Create a paywall in the dashboard and choose your mode. This sets how money flows and **cannot be changed later**.
+<Steps>
+  <Step title="Create a paywall & choose mode">
+    Create a paywall in the [dashboard](https://dashboard.paywalls.ai) and choose your mode. This sets how money flows and cannot be changed later.
 
-- **Default (App‑scoped wallet)** — You collect payments directly (e.g., Stripe or your own rails). Users’ balances live in your app’s scope. You credit balances via **Deposit API** and charges deduct from that balance. _No end‑user authorization step._
-- **Shared (Cross‑app wallet)** — Paywalls.ai hosts a **user‑controlled** wallet that can be spent across apps. Users authorize your paywall. You earn per usage and later **withdraw**. _End‑user authorization required._
+    - <strong>Default (App‑scoped wallet)</strong> — You collect payments directly (e.g., Stripe or your own rails). Users’ balances live in your app’s scope. You credit balances via Deposit API and charges deduct from that balance. No end‑user authorization step.
 
-> Not sure which to pick? See **How‑to → Choose a mode (Default vs Shared)**.
+    - <strong>Shared (Cross‑app wallet)</strong> — Paywalls hosts a user‑controlled wallet that can be spent across apps. Users authorize your paywall. You earn per usage and later withdraw. End‑user authorization required.
 
----
+    <Card title="Choose a mode" href="how-to-guides/choose-a-mode">
+      Compare Default vs Shared mode, trade‑offs, and examples.
+    </Card>
 
-### Step 2 — Configure a model provider
+  </Step>
 
-- **Default mode (required):** connect a provider via **BYOK**. Options include **OpenAI**, **Together AI** (OpenAI‑compatible), **OpenRouter** (unified OpenAI‑style API), or any **OpenAI‑compatible** endpoint (self‑hosted or vendor).
+    <Step title="Configure a model provider">
+    <Tabs>
+      <Tab title="Default mode (required)">
+        Connect a provider via BYOK. Works with OpenAI, Together (OpenAI‑compatible), OpenRouter, or any OpenAI‑compatible endpoint (self‑hosted/vendor).
 
-  > In Default mode, balances are _virtual/app‑scoped_, so Paywalls cannot pay a third‑party model provider on the user’s behalf.
+<Card title="Model providers" href="core-concepts/model-providers" icon="cpu">
+  Model selection & routing
+</Card>
 
-- **Shared mode (optional):** either use the **built‑in provider (powered by OpenRouter)** with **no setup** to access OpenRouter models immediately, or connect your own keys (BYOK). Model costs are charged to the **end‑user’s shared wallet**; Paywalls automatically splits charges to preserve your developer margin.
+      </Tab>
+      <Tab title="Shared mode (optional)">
+      Use the built‑in provider (powered by OpenRouter) with no setup, or connect your own keys.
 
----
+      <Card title="Model providers" href="how-to-guides/byok-vs-built-in-provider" icon="cpu">
 
-### Step 3 — Configure payments / top‑ups
+BYOK vs Built-in Provider
 
-- **Default mode:** in the dashboard, paste a **restricted Stripe API key**. Paywalls will **auto‑generate checkout links** when users need to top up and **auto‑subscribe to webhooks** to credit balances. _(No custom checkout/webhook code required.)_
-  Alternatively, use **custom rails** and call **Deposit API** after you receive funds.
-- **Shared mode:** no payment setup required—**Paywalls hosts top‑ups**. Users fund their shared wallet; you’ll see earnings accrue for **withdrawal**.
+</Card>
+      </Tab>
+    </Tabs>
 
----
+    </Step>
 
-### Step 4 — Copy API key & base URL; make your first request
+    <Step title="Configure payments / top‑ups">
+    <Tabs>
+      <Tab title="Default mode">
 
-Grab your paywall API key (`sk-paywalls-…`) and point your existing OpenAI client at the Paywalls base URL.
+Paste a <em>restricted</em> Stripe API key in the
+dashboard. Paywalls auto‑creates checkout links and subscribes to webhooks to
+credit balances. Or use custom rails and call Deposit API after you receive
+funds.
 
-**Node (OpenAI SDK)**
+<Columns cols={2}>
+      <Card title="Connect Stripe" href="how-to-guides/connect-stripe" icon="credit-card">
+        Fast path with Stripe test/live keys.
+      </Card>
+      <Card title="Test keys & environments" href="more/test-keys-and-environments" icon="flask-round">
+        How to test end‑to‑end safely.
+      </Card>
+    </Columns>
+      </Tab>
+      <Tab title="Shared mode">
+  No payment setup required — Paywalls hosts top‑ups. Users fund their shared wallet; your earnings accrue for withdrawal.
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Copy API key & base URL; make your first request">
+    Grab your paywall API key (sk‑paywalls‑…) and point your OpenAI client at the Paywalls base URL.
+
+    <Info>
+      Always include a stable, pseudonymous user id: body <code>user</code> (recommended) or header <code>X‑Paywall‑User</code>. Keep your key server‑side.
+    </Info>
+
+    <Tabs>
+      <Tab title="Node (OpenAI SDK)">
 
 ```ts
 import OpenAI from "openai";
-
 const client = new OpenAI({
   apiKey: process.env.PAYWALLS_API_KEY, // sk-paywalls-...
   baseURL: "https://api.paywalls.ai/v1",
 });
-
 const resp = await client.chat.completions.create({
   model: "openai/gpt-4o-mini",
-  user: "user_123", // or: send X-Paywall-User header
+  user: "user_123",
   messages: [{ role: "user", content: "Hello!" }],
 });
 console.log(resp.choices[0]?.message?.content);
 ```
 
-**Python (OpenAI SDK)**
+      </Tab>
+      <Tab title="Python (OpenAI SDK)">
 
 ```python
 from openai import OpenAI
 import os
-
-client = OpenAI(api_key=os.environ["PAYWALLS_API_KEY"],
-                base_url="https://api.paywalls.ai/v1")
-
+client = OpenAI(api_key=os.environ["PAYWALLS_API_KEY"], base_url="https://api.paywalls.ai/v1")
 resp = client.chat.completions.create(
-    model="gpt-4o-mini",
+    model="openai/gpt-4o-mini",
     user="user_123",
     messages=[{"role": "user", "content": "Hello!"}],
 )
 print(resp.choices[0].message.content)
 ```
 
-**fetch (header identity)**
+      </Tab>
+      <Tab title="fetch (JS)">
 
 ```js
 const r = await fetch("https://api.paywalls.ai/v1/chat/completions", {
@@ -79,7 +117,7 @@ const r = await fetch("https://api.paywalls.ai/v1/chat/completions", {
   headers: {
     Authorization: `Bearer ${process.env.PAYWALLS_API_KEY}`,
     "Content-Type": "application/json",
-    "X-Paywall-User": "user_123", // header-based identity
+    "X-Paywall-User": "user_123",
   },
   body: JSON.stringify({
     model: "openai/gpt-4o-mini",
@@ -89,7 +127,8 @@ const r = await fetch("https://api.paywalls.ai/v1/chat/completions", {
 const json = await r.json();
 ```
 
-**curl**
+      </Tab>
+      <Tab title="cURL">
 
 ```bash
 curl https://api.paywalls.ai/v1/chat/completions \
@@ -102,13 +141,56 @@ curl https://api.paywalls.ai/v1/chat/completions \
   }'
 ```
 
----
+      </Tab>
+    </Tabs>
 
-### Step 5 — How responses behave (both modes)
+    <Columns cols={2}>
 
-- Paywall-required flows arrive as **normal assistant messages**. Your app does **not** need special branching—render them like any chat reply.
-- If the user must **authorize** (Shared) or **top up** (both modes), the assistant message already contains the **link** (authorization or checkout). After completion, usage proceeds and the next responses stream normally.
-- **Default mode**: Stripe webhooks **auto‑deposit** into the app‑scoped balance.
-- **Shared mode**: charges deduct from the **shared wallet**; your earnings accrue for **withdrawal**.
+  <Card
+    title="Pass user id"
+    href="how-to-guides/pass-user-id"
+    icon="user"
+  >
+    All supported methods and client examples.
+  </Card>
+  <Card title="Client SDKs" href="sdk-integrations/client-sdks" icon="boxes">
+    Node, Python, Go, .NET, cURL, and more.
+  </Card>
+</Columns>
 
-> **Tip**: Always send a stable, pseudonymous `user` value—either in the body (`user`) or via `X-Paywall-User`.
+  </Step>
+
+  <Step title="Understand responses & next steps">
+  
+  <Tabs>
+    <Tab title="Default mode">
+      - Paywall‑required flows arrive as normal assistant messages—render them as any chat reply.
+      - If the user must top up, the message already includes the link. After completion, the next requests proceed normally.
+      - Stripe webhooks auto‑deposit into the app‑scoped balance.
+    </Tab>
+    <Tab title="Shared mode">
+      - Paywall‑required flows arrive as normal assistant messages—render them as any chat reply.
+      - If the user must authorize or top up, the message already includes the link. After completion, the next requests proceed normally.
+      - Charges deduct from the shared wallet; your earnings accrue for withdrawal.
+    </Tab>
+  </Tabs>
+
+<Columns cols={2}>
+  <Card
+    title="Request Lifecycle"
+    href="core-concepts/request-lifecycle"
+    icon="git-compare-arrows"
+  >
+    How requests are processed, metered, and charged.
+  </Card>
+  <Card
+    title="Monetization recipes"
+    href="how-to-guides/use-case-monetization-recipes"
+    icon="hand-coins"
+  >
+    Common patterns and examples.
+  </Card>
+</Columns>
+
+  </Step>
+</Steps>

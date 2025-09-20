@@ -2,15 +2,26 @@
 title: "Model providers"
 ---
 
-Two integration styles:
+<Tabs>
 
-- **BYOK (bring your own key)** — Connect providers you already use (OpenAI, Together, OpenRouter, or any OpenAI‑compatible endpoint). **Required for Default mode.** You pay your provider; Paywalls bills your users.
-- **Built‑in provider (Shared mode)** — Use the built‑in provider (powered by OpenRouter) without adding keys. The end user’s shared wallet covers provider cost; Paywalls splits the charge to preserve your margin. _(Roadmap: allow built‑in provider with Default mode; developer pays provider separately.)_
+<Tab title="Default mode">
+
+    **BYOK (bring your own key)** — Connect providers you already use (OpenAI, Together, OpenRouter, or any OpenAI‑compatible endpoint). You pay your provider; Paywalls bills your users.
+
+  </Tab>
+
+  <Tab title="Shared mode">
+
+    	- **BYOK (bring your own key)** — Connect providers you already use (OpenAI, Together, OpenRouter, or any OpenAI‑compatible endpoint). You pay your provider. Paywalls bills your users.
+
+    	- **Built‑in provider** — Use the built‑in provider (powered by OpenRouter) without adding keys. The end user’s shared wallet covers provider cost; Paywalls splits the charge to preserve your margin.
+
+    </Tab>
+
+</Tabs>
 
 ### Model selection & routing
 
 - You choose a model id (e.g., `openai/gpt-4o-mini`, `openrouter/llama-3.1-70b`). We normalize requests and route to the right upstream.
 - You can mix providers across requests while keeping one pricing surface.
-- _(Optional)_ Fallbacks and failover depend on provider capabilities. **TODO:** Document policies per provider.
-
-See the separate **API Reference (Models)** for listing and selecting models.
+- Fallbacks and failover depend on provider capabilities.
