@@ -8,51 +8,54 @@ title: "Client SDKs"
 
 **Compatibility surface:** Chat Completions (incl. streaming), tools/function‑calling, JSON/structured outputs. Identify the end user via body `user` (preferred) or header `X‑Paywall‑User`.
 
-**Node (streaming)**
+<Tabs>
+  <Tab title="Node (streaming)">
+      ```ts
+      import OpenAI from "openai";
+      const client = new OpenAI({
+        apiKey: process.env.PAYWALLS_API_KEY,
+        baseURL: "https://api.paywalls.ai/v1",
+      });
+      const stream = await client.chat.completions.create({
+        model: "openai/gpt-4o-mini",
+        user: "user_123",
+        stream: true,
+        messages: [
+          { role: "user", content: "Explain usage-based pricing in 2 lines." },
+        ],
+      });
+      for await (const chunk of stream) {
+        const delta = chunk.choices?.[0]?.delta?.content;
+        if (delta) process.stdout.write(delta);
+      }
+      ```
+  </Tab>
+  <Tab title="Python (streaming)">
 
-```ts
-import OpenAI from "openai";
-const client = new OpenAI({
-  apiKey: process.env.PAYWALLS_API_KEY,
-  baseURL: "https://api.paywalls.ai/v1",
-});
-const stream = await client.chat.completions.create({
-  model: "openai/gpt-4o-mini",
-  user: "user_123",
-  stream: true,
-  messages: [
-    { role: "user", content: "Explain usage-based pricing in 2 lines." },
-  ],
-});
-for await (const chunk of stream) {
-  const delta = chunk.choices?.[0]?.delta?.content;
-  if (delta) process.stdout.write(delta);
-}
-```
+    ```python
+    from openai import OpenAI
+    import os
 
-**Python (streaming)**
+    client = OpenAI(api_key=os.environ["PAYWALLS_API_KEY"], base_url="https://api.paywalls.ai/v1")
 
-```python
-from openai import OpenAI
-import os
+    with client.chat.completions.create(
+        model="openai/gpt-4o-mini",
+        user="user_123",
+        stream=True,
+        messages=[{"role": "user", "content": "Explain usage-based pricing in 2 lines."}],
+    ) as stream:
+        for event in stream:
+            delta = event.choices[0].delta.content if event.choices and event.choices[0].delta else None
+            if delta:
+                print(delta, end="")
+    ```
 
-client = OpenAI(api_key=os.environ["PAYWALLS_API_KEY"], base_url="https://api.paywalls.ai/v1")
+  </Tab>
 
-with client.chat.completions.create(
-    model="openai/gpt-4o-mini",
-    user="user_123",
-    stream=True,
-    messages=[{"role": "user", "content": "Explain usage-based pricing in 2 lines."}],
-) as stream:
-    for event in stream:
-        delta = event.choices[0].delta.content if event.choices and event.choices[0].delta else None
-        if delta:
-            print(delta, end="")
-```
+  <Tab title="Go (streaming via go-openai)">
 
-**Go (streaming via go-openai)**
+    ```go
 
-```go
 package main
 
 import (
@@ -67,27 +70,30 @@ func main() {
   cfg.BaseURL = "https://api.paywalls.ai/v1"
   c := openai.NewClientWithConfig(cfg)
 
-  req := openai.ChatCompletionRequest{
-    Model:   "openai/gpt-4o-mini",
-    Stream:  true,
-    Messages: []openai.ChatCompletionMessage{
-      {Role: openai.ChatMessageRoleUser, Content: "Explain usage-based pricing in 2 lines."},
-    },
-  }
-  stream, err := c.CreateChatCompletionStream(context.Background(), req)
-  if err != nil { panic(err) }
-  defer stream.Close()
-
-  for {
-    resp, err := stream.Recv()
-    if errors.Is(err, io.EOF) { break }
-    if err != nil { panic(err) }
-    fmt.Print(resp.Choices[0].Delta.Content)
-  }
+req := openai.ChatCompletionRequest{
+Model: "openai/gpt-4o-mini",
+Stream: true,
+Messages: []openai.ChatCompletionMessage{
+{Role: openai.ChatMessageRoleUser, Content: "Explain usage-based pricing in 2 lines."},
+},
 }
-```
+stream, err := c.CreateChatCompletionStream(context.Background(), req)
+if err != nil { panic(err) }
+defer stream.Close()
 
-**cURL (streaming / SSE)**
+for {
+resp, err := stream.Recv()
+if errors.Is(err, io.EOF) { break }
+if err != nil { panic(err) }
+fmt.Print(resp.Choices[0].Delta.Content)
+}
+}
+
+````
+
+  </Tab>
+
+  <Tab title="cURL (streaming / SSE)">
 
 ```bash
 curl -N https://api.paywalls.ai/v1/chat/completions \
@@ -99,27 +105,12 @@ curl -N https://api.paywalls.ai/v1/chat/completions \
     "stream": true,
     "messages": [{"role":"user","content":"Explain usage-based pricing in 2 lines."}]
   }'
-```
+````
 
-**.NET (HttpClient, non‑stream)**
+  </Tab>
+</Tabs>
 
-```csharp
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Text.Json;
-
-var http = new HttpClient();
-var req = new HttpRequestMessage(HttpMethod.Post, "https://api.paywalls.ai/v1/chat/completions");
-req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Environment.GetEnvironmentVariable("PAYWALLS_API_KEY"));
-req.Content = new StringContent(JsonSerializer.Serialize(new {
-  model = "openai/gpt-4o-mini",
-  user = "user_123",
-  messages = new[]{ new { role = "user", content = "Explain usage-based pricing in 2 lines." } }
-}), Encoding.UTF8, "application/json");
-var res = await http.SendAsync(req);
-var json = await res.Content.ReadAsStringAsync();
-Console.WriteLine(json);
-```
-
-> Notes: (1) Always send a stable, pseudonymous `user` id. (2) For browser-only apps, do not expose your paywall key—use a server, edge function, or proxy.
+<Note>
+  Always send a stable, pseudonymous `user` id. For browser-only apps, do not
+  expose your paywall key—use a server, edge function, or proxy.
+</Note>

@@ -26,6 +26,37 @@ The **proxy** is the drop‑in, OpenAI‑compatible layer that **enforces pricin
 - **Metering & pricing** — Counts tokens, computes charges, and writes **ledger** entries.
 - **Observability** — Attaches a **request id** and correlates ledger entries and events for support/analytics.
 
+### Request lifecycle
+
+<Steps>
+
+<Step title="Request">
+  Your app calls the OpenAI‑compatible endpoint with a **paywall key** and a
+  user id.
+</Step>
+
+<Step title="Decision">
+  The proxy evaluates **authorization** (Shared), **balance**, **limits**, and
+  **pricing** rules.
+</Step>
+
+<Step title="If action is needed">
+  The response is a normal **assistant message** containing an **authorization**
+  or **checkout** link. You render it as‑is; no special branching.
+</Step>
+
+<Step title="Execution">
+  If authorized & funded, the request is forwarded to the configured
+  **provider** (BYOK or built‑in). Streaming is passed through.
+</Step>
+
+<Step title="Meter & bill">
+  — Token usage is measured; the applicable pricing rule computes the charge. A
+  **charge** entry is written to the **ledger**.
+</Step>
+
+</Steps>
+
 ### Security expectations
 
 - Your **paywall API key** must remain **server‑side**.

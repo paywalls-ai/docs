@@ -27,7 +27,6 @@
               "core-concepts/user-identity",
               "core-concepts/proxy",
               "core-concepts/pricing-metering",
-              "core-concepts/request-lifecycle",
               "core-concepts/model-providers"
             ]
           },
@@ -49,8 +48,7 @@
             "group": "SDKs & Integrations",
             "pages": [
               "sdk-integrations/client-sdks",
-              "sdk-integrations/front-end-widgets",
-              "sdk-integrations/vercel-ai-sdk"
+              "sdk-integrations/front-end-widgets"
             ]
           },
           {

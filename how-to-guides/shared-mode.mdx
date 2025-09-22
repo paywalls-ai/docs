@@ -22,6 +22,24 @@ Use Shared mode when you want a user‑controlled wallet that works across Paywa
 - Assistant messages: if authorization or funding is needed, the proxy returns a normal assistant message containing the correct link—render it as a typical model reply.
 - Pricing: per‑model pricing + optional markup is enforced by the proxy; manual charges are also supported.
 
+## Blockchain & settlement
+
+<Info>
+  Shared mode settles on-chain. Today it runs on Polygon and is designed to be
+  chain‑agnostic, so it can operate on additional EVM chains without app changes
+  (more chains coming soon).
+</Info>
+
+- Network: Polygon
+- Currency: USDC (on Polygon) — used for all Shared mode operations: deposits/top‑ups, balances, charges, and payouts.
+- Accounting: all amounts in Shared mode are tracked and displayed in USDC.
+- Interop: the settlement layer is abstracted; enabling more chains won’t require client‑side changes.
+
+<Note>
+  If you show balances to users, label them as USDC and avoid implicit fiat
+  conversions in the UI.
+</Note>
+
 ## Typical flow
 
 1. First chat request (not authorized yet)
@@ -40,11 +58,11 @@ Use Shared mode when you want a user‑controlled wallet that works across Paywa
 
 ## Useful endpoints
 
-- Authorization status and link: [api-reference/user/connect/get.mdx](api-reference/user/connect/get.mdx)
-- Top‑up link: [api-reference/user/balance/topup/get.mdx](api-reference/user/balance/topup/get.mdx)
-- Manual one‑off charges: [api-reference/user/charge/post.mdx](api-reference/user/charge/post.mdx)
-- User menu (links for UI): [api-reference/user/menu/get.mdx](api-reference/user/menu/get.mdx)
-- Current balance (for display): [api-reference/user/balance/get.mdx](api-reference/user/balance/get.mdx)
+- [Authorization status and link](/api-reference/user/connect/get)
+- [Top‑up link](/api-reference/user/balance/topup/get)
+- [Manual one‑off charges](/api-reference/user/charge/post)
+- [User menu (links for UI)](/api-reference/user/menu/get)
+- [Current balance (for display)](/api-reference/user/balance/get)
 
 ## Minimal example (manual charge + renderable fallback)
 
@@ -75,6 +93,6 @@ if (json.success) {
 
 See also:
 
-- Core concepts → [Paywalls, wallets & ledger](core-concepts/paywalls-wallets-ledger.mdx)
-- Core concepts → [Model providers](core-concepts/model-providers.mdx)
-- How‑to → [BYOK vs built‑in provider](how-to-guides/byok-vs-built-in-provider.mdx)
+- Core concepts → [Paywalls, wallets & ledger](/core-concepts/paywalls-wallets-ledger)
+- Core concepts → [Model providers](/core-concepts/model-providers)
+- How‑to → [BYOK vs built‑in provider](/how-to-guides/byok-vs-built-in-provider)

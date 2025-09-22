@@ -16,7 +16,7 @@ icon: "rocket"
 
     - <strong>Shared (Cross‑app wallet)</strong> — Paywalls hosts a user‑controlled wallet that can be spent across apps. Users authorize your paywall. You earn per usage and later withdraw. End‑user authorization required.
 
-    <Card title="Choose a mode" href="how-to-guides/choose-a-mode">
+    <Card title="Choose a mode" href="/how-to-guides/choose-a-mode" icon="wallet">
       Compare Default vs Shared mode, trade‑offs, and examples.
     </Card>
 
@@ -25,21 +25,35 @@ icon: "rocket"
     <Step title="Configure a model provider">
     <Tabs>
       <Tab title="Default mode (required)">
-        Connect a provider via BYOK. Works with OpenAI, Together (OpenAI‑compatible), OpenRouter, or any OpenAI‑compatible endpoint (self‑hosted/vendor).
+        Connect a provider via BYOK. Works with OpenAI, TogetherAI, OpenRouter, or any OpenAI‑compatible API.
 
-<Card title="Model providers" href="core-concepts/model-providers" icon="cpu">
-  Model selection & routing
-</Card>
+<Columns cols={2}>
+  <Card
+    title="Model providers"
+    href="/core-concepts/model-providers"
+    icon="cpu"
+  >
+    Model selection & routing
+  </Card>
+  <Card title="Paywalls Proxy" href="/core-concepts/proxy" icon="cloud">
+    OpenAI-compatible proxy
+  </Card>
+</Columns>
 
       </Tab>
       <Tab title="Shared mode (optional)">
       Use the built‑in provider (powered by OpenRouter) with no setup, or connect your own keys.
 
-      <Card title="Model providers" href="how-to-guides/byok-vs-built-in-provider" icon="cpu">
+<Columns cols={2}>
+      <Card title="Model providers" href="/how-to-guides/byok-vs-built-in-provider" icon="cpu">
 
 BYOK vs Built-in Provider
 
 </Card>
+<Card title="Paywalls Proxy" href="/core-concepts/proxy" icon="cloud">
+    OpenAI-compatible proxy
+  </Card>
+  </Columns>
       </Tab>
     </Tabs>
 
@@ -51,7 +65,7 @@ BYOK vs Built-in Provider
 
 Paste a <em>restricted</em> Stripe API key in the
 dashboard. Paywalls auto‑creates checkout links and subscribes to webhooks to
-credit balances. Or use custom rails and call Deposit API after you receive
+credit balances. Or use custom rails and [call Deposit API](/api-reference/user/balance/deposit/post) after you receive
 funds.
 
 <Columns cols={2}>
@@ -164,12 +178,12 @@ curl https://api.paywalls.ai/v1/chat/completions \
   
   <Tabs>
     <Tab title="Default mode">
-      - Paywall‑required flows arrive as normal assistant messages—render them as any chat reply.
+      - Paywall‑required flows arrive as normal assistant messages — render them as any chat reply.
       - If the user must top up, the message already includes the link. After completion, the next requests proceed normally.
       - Stripe webhooks auto‑deposit into the app‑scoped balance.
     </Tab>
     <Tab title="Shared mode">
-      - Paywall‑required flows arrive as normal assistant messages—render them as any chat reply.
+      - Paywall‑required flows arrive as normal assistant messages — render them as any chat reply.
       - If the user must authorize or top up, the message already includes the link. After completion, the next requests proceed normally.
       - Charges deduct from the shared wallet; your earnings accrue for withdrawal.
     </Tab>

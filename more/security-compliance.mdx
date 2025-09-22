@@ -12,7 +12,10 @@ This page summarizes how Paywalls handles authentication, data, and payments, an
 - Prefer restricted provider keys (e.g., Stripe Restricted Key) with the least scopes needed.
 - Use `Idempotency-Key` for non‑idempotent POSTs (e.g., manual charges, deposits) to prevent duplicates.
 
-See also: `more/errors-limits-reliability.mdx` (Idempotency) and `how-to-guides/connect-stripe.mdx`.
+See also:
+
+- [Idempotency](/more/errors-limits-reliability)
+- [Connect Stripe](/how-to-guides/connect-stripe)
 
 ## Data handling & privacy
 
@@ -21,9 +24,8 @@ See also: `more/errors-limits-reliability.mdx` (Idempotency) and `how-to-guides/
 - Operational metadata: ledgers and logs store request identifiers (e.g., `user`, `requestId`, model id) for billing, support, and audit.
 - Prompts & outputs: your app controls what content is sent to providers; treat prompt data as potentially sensitive.
 - Encryption in transit: all APIs require HTTPS (TLS 1.2+).
-- Encryption at rest: data at rest is encrypted in our managed infrastructure.
 
-Refer to: `privacy.mdx` for full privacy policy and data subject rights.
+See [Privacy](/privacy) for full privacy policy and data subject rights.
 
 ## Payments & PCI scope
 
@@ -31,12 +33,14 @@ Refer to: `privacy.mdx` for full privacy policy and data subject rights.
 - Shared mode: Paywalls hosts top‑ups; checkout and card handling occur with our payment providers. Your earnings accrue on usage and are available for withdrawal per policy.
 - Taxes/invoicing: your app remains responsible for its own ToS, privacy, and tax obligations to end users.
 
-See: `how-to-guides/connect-stripe.mdx` and `more/test-keys-and-environments.mdx`.
+See:
+
+- [Connect Stripe](/how-to-guides/connect-stripe)
+- [Test keys & environments](/more/test-keys-and-environments)
 
 ## Network & transport security
 
 - All API endpoints are served over HTTPS; reject plain HTTP.
-- Consider outbound egress controls on your infrastructure to prevent accidental data exfiltration.
 
 ## Data retention & deletion
 
@@ -63,16 +67,9 @@ See: `how-to-guides/connect-stripe.mdx` and `more/test-keys-and-environments.mdx
 - Regular backups of critical data with encrypted storage.
 - Service restoration and continuity procedures are maintained;
 
-## Mode‑specific notes
-
-- Default mode: use a Restricted Stripe key; store Stripe `payment_intent`/`checkout_session` ids in ledger metadata for reconciliation. Do not expose Stripe secrets in clients.
-- Shared mode: treat assistant messages that include authorization or top‑up links as normal model replies; render them directly. No keys are required on the client beyond your paywall key on the server.
-
-Cross‑refs: `core-concepts/user-identity.mdx`, `core-concepts/paywalls-wallets-ledger.mdx`, `core-concepts/pricing-metering.mdx`.
-
 ## Your responsibilities
 
-- Keep secrets server‑side; never expose paywall or provider keys to browsers or untrusted clients.
+- Keep secrets server‑side; never expose paywall, stripe or provider keys to browsers or untrusted clients.
 - Send a `user` with every billable request; avoid PII where possible.
 - Verify webhooks, log request identifiers, and make side‑effects idempotent.
 - Follow your local laws and platform policies (privacy, taxes, consumer protection).

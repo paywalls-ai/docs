@@ -17,8 +17,7 @@ Recommended Stripe key settings:
 
 ### Advanced — Custom rails
 
-- Use your own checkout (Stripe Elements/Checkout or another PSP). On payment success, call `POST /v1/user/balance/deposit` to credit the user.
+- Use your own checkout (Stripe Elements/Checkout or another PSP).
+- On payment success, call `POST /v1/user/balance/deposit` to credit the user.
 - Keep your internal `user_id`, PSP `payment_intent`, and any invoice refs in `metadata` for reconciliation.
-- Make your webhook handler idempotent.
-
-> Security: Use a **restricted** key with only the permissions Paywalls needs; keep all API keys server‑side. Test with Stripe test keys first, then swap to live—no code changes required.
+- No need to share any keys with paywalls.
