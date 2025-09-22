@@ -1,0 +1,226 @@
+---
+title: "Grant credits (Default mode)"
+---
+
+Learn how to grant or top up user balances programmatically using the Deposit API. This is useful for signup bonuses, subscription renewals, refunds/goodwill, migrations, or promotions.
+
+<Info>
+  This guide applies to Default mode (you control payments). In Shared mode,
+  users fund a hosted, cross‑app wallet and you don’t deposit credits directly.
+  See <a href="/how-to-guides/shared-mode">Shared Mode</a>.
+</Info>
+
+<Steps>
+
+<Step title="Prerequisites">
+
+    - Default mode enabled and your Paywalls API key configured.
+
+    - A stable, pseudonymous user id selected. See <a href="/core-concepts/user-identity">User Identity</a>.
+
+  </Step>
+
+<Step title="Call the Deposit API">
+
+Use <a href="/api-reference/user/balance/deposit">POST `/v1/user/balance/deposit/post`</a>. Amount is a string in your configured currency (e.g., "10").
+
+<Tabs>
+  
+  <Tab title="cURL">
+  
+		```bash
+		curl -X POST https://api.paywalls.ai/v1/user/balance/deposit \
+		-H "Authorization: Bearer $PAYWALLS_API_KEY" \
+		-H "Content-Type: application/json" \
+		-H "Idempotency-Key: $UNIQUE_EVENT_ID" \
+		-d '{
+			"user": "user_123",
+			"amount": "10",
+			"metadata": {
+				"reason": "signup_bonus",
+				"source": "marketing_campaign_2025_09"
+			}
+		}'
+		```
+  </Tab>
+
+  <Tab title="Node.js (fetch)">
+  
+		```ts
+		const res = await fetch("https://api.paywalls.ai/v1/user/balance/deposit", {
+		method: "POST",
+		headers: {
+			Authorization: `Bearer ${process.env.PAYWALLS_API_KEY}`,
+			"Content-Type": "application/json"
+		},
+		body: JSON.stringify({
+			user: "user_123",
+			amount: "10",
+			metadata: { reason: "signup_bonus", campaign: "fall_launch" },
+		}),
+		});
+		const json = await res.json();
+		```
+  
+  </Tab>
+
+  <Tab title="Python (requests)">
+  
+		```python
+		import os, requests, json
+
+    	r = requests.post(
+    	"https://api.paywalls.ai/v1/user/balance/deposit",
+    	headers={
+    	"Authorization": f"Bearer {os.environ['PAYWALLS_API_KEY']}",
+    	"Content-Type": "application/json"
+    	},
+    	data=json.dumps({
+    	"user": "user_123",
+    	"amount": "10",
+    	"metadata": {"reason": "signup_bonus"}
+    	}),
+    	)
+    	data = r.json()
+
+    	````
+
+  </Tab>
+
+</Tabs>
+
+</Step>
+
+<Step title="Verify and display balances">
+
+- The deposit appears in the Ledger immediately.
+
+- Optionally fetch the updated balance for display using <a href="/api-reference/user/balance/get">GET /user/balance</a>.
+
+</Step>
+
+</Steps>
+
+<Note>
+  Include Idempotency-Key so repeated webhooks or retries do not create
+  duplicate credits.
+</Note>
+
+## Common scenarios
+
+### 1. Signup bonus on registration
+
+Grant a one‑time credit when a new account is created.
+
+- Amount: small trial amount (e.g., "1.00")
+- Metadata: `{"reason":"signup_bonus","signup_event":"evt_signup_123"}`
+
+```ts
+// Example: in your user-created handler
+await fetch("https://api.paywalls.ai/v1/user/balance/deposit", {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${process.env.PAYWALLS_API_KEY}`,
+    "Content-Type": "application/json",
+    "Idempotency-Key": `signup:${userId}`, // stable for this logical event
+  },
+  body: JSON.stringify({
+    user: userId,
+    amount: "1.00",
+    metadata: { reason: "signup_bonus" },
+  }),
+});
+```
+
+### 2. Subscription renewal credits
+
+Credit users monthly after your PSP confirms payment (e.g., Stripe invoice.payment_succeeded).
+
+- Amount: your plan’s included usage value (e.g., "10.00")
+- Metadata: include invoice id, plan, period_start/end for reconciliation
+
+```ts
+// Example: in your Stripe webhook handler (invoice.payment_succeeded)
+const {
+  id: invoiceId,
+  payment_intent: pi,
+  customer,
+  lines,
+} = event.data.object;
+await fetch("https://api.paywalls.ai/v1/user/balance/deposit", {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${process.env.PAYWALLS_API_KEY}`,
+    "Content-Type": "application/json",
+    "Idempotency-Key": invoiceId, // prevents duplicates on retries
+  },
+  body: JSON.stringify({
+    user: mapStripeCustomerToUserId(customer),
+    amount: planIncludedCreditsAmount(lines), // e.g., "10.00"
+    metadata: {
+      reason: "subscription_included_credits",
+      invoice_id: invoiceId,
+      payment_intent: pi,
+    },
+  }),
+});
+```
+
+<Info>
+  See [Connect Stripe](/how-to-guides/connect-stripe) for Default mode setup.
+</Info>
+
+## No‑code (Zapier, n8n)
+
+You can call the Deposit API from no‑code tools to credit balances without custom code.
+
+- Method: POST https://api.paywalls.ai/v1/user/balance/deposit
+- Headers:
+  - Authorization: `Bearer PAYWALLS_API_KEY`
+  - Content-Type: `application/json`
+- Body: `{ "user": "...", "amount": "2.00", "metadata": { ... } }`
+
+<Note>
+  Prefer injecting a stable `user` from your CRM/DB. For no‑code patterns, see
+  [No-code: Zapier, n8n, and other
+  flows](/how-to-guides/no-code-zapier-n8n-flows).
+</Note>
+
+## Best practices
+
+- Idempotency first: reuse the same Idempotency-Key on retries/webhook replays.
+- Pseudonymous identity: avoid PII in user ids. See <a href="/core-concepts/user-identity">User Identity</a>.
+- Don’t expose keys: keep `PAYWALLS_API_KEY` server/edge only.
+- Reconciliation: store invoice/payment ids in metadata. Use the Ledger and <a href="/more/analytics-reporting">Analytics & Reporting</a>.
+- Testing: use Stripe test mode in Default mode staging. See <a href="/more/test-keys-and-environments">Test keys & Environments</a>.
+
+## Related
+
+<Columns cols={2}>
+  <Card
+    title="Deposit API"
+    icon="credit-card"
+    href="/api-reference/user/balance/deposit/post"
+  >
+    Reference for POST /user/balance/deposit.
+  </Card>
+
+{" "}
+
+<Card
+  title="User balance (GET)"
+  icon="wallet"
+  href="/api-reference/user/balance/get"
+>
+  Fetch and display a user’s current balance.
+</Card>
+
+  <Card
+    title="Pricing & Metering"
+    icon="calculator"
+    href="/core-concepts/pricing-metering"
+  >
+    How charges are computed and written to the ledger.
+  </Card>
+  
+</Columns>
