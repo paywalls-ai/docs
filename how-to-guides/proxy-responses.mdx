@@ -1,0 +1,95 @@
+---
+title: "Configure Proxy responses"
+---
+
+Customize what end‑users see when the proxy needs them to take action (authorize, top up) or when something goes wrong (e.g., model unavailable). Configure simple static templates with placeholders, or plug in your own API/agent to generate fully custom messages.
+
+<Info>
+  Works in both modes. In Shared mode, links point to hosted
+  authorization/top‑ups. In Default mode, top‑up links reflect your Stripe or
+  custom rails when configured.
+</Info>
+
+## Choose a strategy
+
+You can mix and match:
+
+- Static templates — fastest to launch. Use placeholders like `{{url}}`.
+
+- Custom Response API — call your own endpoint (or AI agent) to build tailored messages based on context.
+
+### Static templates with placeholders
+
+Define per‑event templates in the dashboard. The proxy will render variables before returning an assistant message to your app.
+
+Supported events (examples):
+
+- Authorization required (Shared mode): ask the user to connect.
+
+- Insufficient funds: prompt a top‑up and show the right link.
+
+- Model unavailable/provider error: show a graceful fallback and optional retry guidance.
+
+Common placeholders:
+
+- `{{ url }}` — URL for user authorization (Shared mode), or top up (both modes).
+
+- `{{ name }}` — Your Application name as configured in the dashbord (Shared mode).
+
+Example template (insufficient funds):
+
+```text
+Your balance is too low.
+
+Please follow on the link to top up: {{url}}
+
+Then repeat your prompt to continue.
+```
+
+Behavior:
+
+- If an event is triggered, the proxy returns a normal assistant message containing your rendered template. Simply show it as a typical model reply (no special UI required).
+
+### Custom Response API (advanced)
+
+Have the proxy POST context to your endpoint. Your service (or AI agent) returns a message string that the proxy relays back to the user.
+
+When to use:
+
+- Personalized upsells (e.g., suggest smaller models for low balances)
+- Multilingual responses based on user locale
+- Deep troubleshooting and status pages for provider outages
+
+Notes:
+
+- Timeouts: keep processing quick (a few seconds). If your API times out or errors, the proxy falls back to your static template or a safe default.
+- Security: keep your endpoint private; validate requests and verify signatures if enabled. See <a href="/more/security-compliance">Security & Compliance</a>.
+
+## Test and iterate
+
+- Trigger cases:
+  - Authorization required: send a request as a new user (Shared mode) → expect a connect link message.
+  - Insufficient funds: drain a small balance and request again → expect a top‑up link message.
+  - Model unavailable: simulate a disabled model in your dashboard → expect a graceful fallback message.
+- Confirm messages render correctly in your client UI (streaming and non‑streaming).
+
+## Tips
+
+- Keep copy short and actionable. Put the primary link up front.
+- Use placeholders for links instead of hardcoding URLs in templates.
+- Consider localization: your Custom Response API can detect `locale` and return translated text.
+- For manual fees or special flows, pair with <a href="/how-to-guides/grant-credits">Grant credits</a> and <a href="/core-concepts/pricing-metering">Pricing & Metering</a>.
+
+## Related
+
+<Columns cols={2}>
+
+    <Card title="Shared Mode" icon="users" href="/how-to-guides/shared-mode">
+      How authorization and top‑ups work with hosted wallets.
+    </Card>
+
+    <Card title="Errors & Reliability" icon="triangle-alert" href="/more/errors-limits-reliability">
+      Timeouts, retries, and safe fallbacks for robust UX.
+    </Card>
+
+</Columns>

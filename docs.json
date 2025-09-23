@@ -42,7 +42,9 @@
               "how-to-guides/no-code-zapier-n8n-flows",
               "how-to-guides/use-case-monetization-recipes",
               "how-to-guides/use-paywalls-with-existing-subscriptions",
-              "how-to-guides/grant-credits"
+              "how-to-guides/grant-credits",
+              "how-to-guides/proxy-responses",
+              "how-to-guides/configure-profile"
             ]
           },
           {
