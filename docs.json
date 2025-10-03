@@ -11,6 +11,12 @@
     "library": "lucide"
   },
   "favicon": "/favicon.svg",
+  "integrations": {
+    "posthog": {
+        "apiKey": "phc_KNPKUr5kEutoQTM4lxC6OU4ulMKdzn5sua4Q2Kmz1sC",
+        "apiHost": "https://eu.i.posthog.com"
+    }
+  },
   "navigation": {
     "tabs": [
       {
