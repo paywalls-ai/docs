@@ -1,43 +1,52 @@
 ---
-title: "Client SDKs"
+title: "AI SDKs"
 ---
 
-**Client‑agnostic by design.** If your client can call an OpenAI‑style HTTP API, it works with Paywalls. In most cases you only change the **baseURL** and the **API key**—no proprietary SDK required.
+**Client‑agnostic by design.** If your client can call an OpenAI‑style HTTP API, it works with Paywalls. In most cases you only change the **baseURL** and the **API key** — no new SDK integration or code changes required.
 
-**Works with:** official OpenAI SDKs (**Node, Python, .NET, Java**), community clients (**Go, Ruby, Rust, PHP**), and plain HTTP (**fetch/axios, curl, Postman**). Edge/serverless runtimes are supported.
+**Works with:** official OpenAI SDK, Vercel AI SDK, OpenRouter SDK, community clients, and plain HTTP requests. Edge/serverless runtimes are supported.
 
-**Compatibility surface:** Chat Completions (incl. streaming), tools/function‑calling, JSON/structured outputs. Identify the end user via body `user` (preferred) or header `X‑Paywall‑User`.
+**Compatibility:** Chat Completions (including streaming), tools/function‑calling, JSON/structured outputs.
+
+## OpenAI SDK
 
 <Tabs>
-  <Tab title="Node (streaming)">
-      ```ts
-      import OpenAI from "openai";
-      const client = new OpenAI({
-        apiKey: process.env.PAYWALLS_API_KEY,
-        baseURL: "https://api.paywalls.ai/v1",
-      });
-      const stream = await client.chat.completions.create({
-        model: "openai/gpt-4o-mini",
-        user: "user_123",
-        stream: true,
-        messages: [
-          { role: "user", content: "Explain usage-based pricing in 2 lines." },
-        ],
-      });
-      for await (const chunk of stream) {
-        const delta = chunk.choices?.[0]?.delta?.content;
-        if (delta) process.stdout.write(delta);
+  <Tab title="Typescript">
+    ```ts
+    import OpenAI from "openai";
+    
+    const user = "user_123"; // Stable, pseudonymous user ID
+    
+    const client = new OpenAI({
+      apiKey: process.env.PAYWALLS_API_KEY, // Set your Paywalls API key here
+      baseURL: "https://api.paywalls.ai/v1", // Change baseURL to Paywalls
+      headers: {
+        "X-Paywall-User": user // Identify the end user
       }
-      ```
+    });
+    
+    const stream = await client.chat.completions.create({
+      model: "gpt-5",
+      user: "user_123",
+      stream: true,
+      messages: [
+        { role: "user", content: "Explain usage-based pricing in 2 lines." },
+      ],
+    });
+    
+    for await (const chunk of stream) {
+      const delta = chunk.choices?.[0]?.delta?.content;
+      if (delta) process.stdout.write(delta);
+    }
+    ```
   </Tab>
-  <Tab title="Python (streaming)">
-
+  <Tab title="Python">
     ```python
     from openai import OpenAI
     import os
-
+    
     client = OpenAI(api_key=os.environ["PAYWALLS_API_KEY"], base_url="https://api.paywalls.ai/v1")
-
+    
     with client.chat.completions.create(
         model="openai/gpt-4o-mini",
         user="user_123",
@@ -49,68 +58,129 @@ title: "Client SDKs"
             if delta:
                 print(delta, end="")
     ```
-
-  </Tab>
-
-  <Tab title="Go (streaming via go-openai)">
-
-    ```go
-
-package main
-
-import (
-  "context"
-  "errors"
-  "fmt"
-  "io"
-  openai "github.com/sashabaranov/go-openai"
-)
-func main() {
-  cfg := openai.DefaultConfig("$PAYWALLS_API_KEY")
-  cfg.BaseURL = "https://api.paywalls.ai/v1"
-  c := openai.NewClientWithConfig(cfg)
-
-req := openai.ChatCompletionRequest{
-Model: "openai/gpt-4o-mini",
-Stream: true,
-Messages: []openai.ChatCompletionMessage{
-{Role: openai.ChatMessageRoleUser, Content: "Explain usage-based pricing in 2 lines."},
-},
-}
-stream, err := c.CreateChatCompletionStream(context.Background(), req)
-if err != nil { panic(err) }
-defer stream.Close()
-
-for {
-resp, err := stream.Recv()
-if errors.Is(err, io.EOF) { break }
-if err != nil { panic(err) }
-fmt.Print(resp.Choices[0].Delta.Content)
-}
-}
-
-````
-
-  </Tab>
-
-  <Tab title="cURL (streaming / SSE)">
-
-```bash
-curl -N https://api.paywalls.ai/v1/chat/completions \
-  -H "Authorization: Bearer $PAYWALLS_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "openai/gpt-4o-mini",
-    "user": "user_123",
-    "stream": true,
-    "messages": [{"role":"user","content":"Explain usage-based pricing in 2 lines."}]
-  }'
-````
-
   </Tab>
 </Tabs>
 
+## Vercel AI SDK with Next.js
+
+<Tabs>
+  <Tab title="Next.js API route">
+    ```ts
+    import { streamText } from 'ai'
+    import { createOpenAI } from '@ai-sdk/openai'
+    
+    export async function POST(request: Request) {
+      const { messages } = await request.json()
+    
+      const user = "user_123" // Stable, pseudonymous user ID
+    
+      const monetizedAI = createOpenAI({
+        apiKey: process.env.PAYWALLS_API_KEY, // Your Paywalls API key
+        baseURL: 'https://api.paywalls.ai/v1', // Change baseURL to Paywalls
+        headers: {
+          "X-Paywall-User": user // Identify the end user
+        }
+      })
+    
+      const result = await streamText({
+        model: monetizedAI('gpt-5'),
+        messages
+      })
+    
+      return result.toAIStreamResponse()
+    }
+    ```
+  </Tab>
+  <Tab title="Client component">
+    ```tsx
+    'use client'
+    
+    import { useChat } from 'ai/react'
+    
+    export default function PersonalAssistant() {
+      const { messages, input, handleInputChange, handleSubmit } = useChat()
+    
+      return (
+        <div className="flex flex-col h-screen max-w-2xl mx-auto p-4">
+          <div className="flex-1 overflow-y-auto space-y-4">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`p-4 rounded-lg ${
+                  message.role === 'user' ? 'bg-blue-100 ml-auto' : 'bg-gray-100'
+                }`}
+              >
+                <p>{message.content}</p>
+              </div>
+            ))}
+          </div>
+    
+          <form onSubmit={handleSubmit} className="mt-4">
+            <input
+              value={input}
+              onChange={handleInputChange}
+              placeholder="Tell me about yourself or ask me anything..."
+              className="w-full p-2 border rounded"
+            />
+          </form>
+        </div>
+      )
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## OpenRouter
+
+```ts
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
+import { streamText } from "ai";
+
+const openrouter = createOpenRouter({
+  apiKey: process.env.PAYWALLS_API_KEY, // Your Paywalls API key
+  baseURL: "https://api.paywalls.ai/v1", // Change baseURL to Paywalls
+  headers: {
+    "X-Paywall-User": "user_123", // Stable, pseudonymous user ID
+  },
+});
+const model = openrouter("anthropic/claude-3.7-sonnet:thinking");
+await streamText({
+  model,
+  messages: [{ role: "user", content: "Hello" }],
+});
+```
+
+## Together AI
+
+```ts
+import Together from "together-ai";
+
+const client = new Together({
+  apiKey: process.env.PAYWALLS_API_KEY, // Your Paywalls API key
+  baseURL: "https://api.paywalls.ai/v1", // Change baseURL to Paywalls
+  headers: {
+    "X-Paywall-User": "user_123", // Stable, pseudonymous user ID
+  },
+});
+
+const chatCompletion = await client.chat.completions.create({
+  messages: [
+    { role: "user", content: "Explain usage-based pricing in 2 lines." },
+  ],
+  model: "mistralai/Mixtral-8x7B-Instruct-v0.1",
+});
+
+console.log(chatCompletion.choices);
+```
+
+## Environment Setup
+
+Ensure you have your Paywalls API key set in your environment variables:
+
+```bash
+PAYWALLS_API_KEY="your_paywalls_api_key_here"
+```
+
 <Note>
-  Always send a stable, pseudonymous `user` id. For browser-only apps, do not
-  expose your paywall key—use a server, edge function, or proxy.
+  Always send a stable, pseudonymous `user` id. For browser-only apps, do not expose your paywall key — use a server or edge function.
 </Note>
