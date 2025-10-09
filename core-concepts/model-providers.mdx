@@ -2,26 +2,43 @@
 title: "Model providers"
 ---
 
+The model provider is the underlying AI service that runs the model (for example, OpenAI, Azure OpenAI, Anthropic). The default provider and model are configured in the [Dashboard](https://dashboard.paywalls.ai), which controls available models, credentials, quotas, and routing behavior.
+
 <Tabs>
+  <Tab title="Default mode">
+    **BYOK (bring your own key)** — Connect any OpenAI-compatible AI provider you already use. Simply add your API key in the Dashboard and you're ready to go.
 
-<Tab title="Default mode">
+    **Supported providers include:**
 
-    **BYOK (bring your own key)** — Connect providers you already use (OpenAI, Together, OpenRouter, or any OpenAI‑compatible endpoint). You pay your provider; Paywalls bills your users.
+    - OpenAI
+    - Anthropic
+    - OpenRouter
+    - Together AI
+    - Any OpenAI-compatible endpoint
 
+    **How it works:** You pay your AI provider directly for usage. Paywalls handles billing your end users and passes requests through to your provider.
   </Tab>
-
   <Tab title="Shared mode">
+    Choose between two options:
 
-    	- **BYOK (bring your own key)** — Connect providers you already use (OpenAI, Together, OpenRouter, or any OpenAI‑compatible endpoint). You pay your provider. Paywalls bills your users.
+    **Option 1: BYOK (bring your own key)**
 
-    	- **Built‑in provider** — Use the built‑in provider (powered by OpenRouter) without adding keys. The end user’s shared wallet covers provider cost; Paywalls splits the charge to preserve your margin.
+    - Connect any OpenAI-compatible provider (OpenAI, Anthropic, OpenRouter, Together AI, or custom endpoints)
+    - Add your API key in the Dashboard to get started
+    - You pay your provider directly; Paywalls bills your users
 
-    </Tab>
+    **Option 2: Built-in provider (zero setup)**
 
+    - Use Paywalls.ai's built-in provider powered by OpenRouter
+    - **No API keys, configuration, or provider accounts required**
+    - Start using AI models immediately without any additional setup
+    - End users' shared wallet covers the provider cost automatically
+    - Paywalls splits the charge to preserve your margin
+  </Tab>
 </Tabs>
 
 ### Model selection & routing
 
 - You choose a model id (e.g., `openai/gpt-4o-mini`, `openrouter/llama-3.1-70b`). We normalize requests and route to the right upstream.
-- You can mix providers across requests while keeping one pricing surface.
-- Fallbacks and failover depend on provider capabilities.
+- You can switch providers or models at any time without changing your integration.
+- You can also set up custom routing rules to use different providers/models for different users, teams, or use cases (coming soon).
