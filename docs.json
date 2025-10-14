@@ -13,8 +13,8 @@
   "favicon": "/favicon.svg",
   "integrations": {
     "posthog": {
-        "apiKey": "phc_KNPKUr5kEutoQTM4lxC6OU4ulMKdzn5sua4Q2Kmz1sC",
-        "apiHost": "https://eu.i.posthog.com"
+      "apiKey": "phc_KNPKUr5kEutoQTM4lxC6OU4ulMKdzn5sua4Q2Kmz1sC",
+      "apiHost": "https://eu.i.posthog.com"
     }
   },
   "navigation": {
@@ -50,7 +50,8 @@
               "how-to-guides/use-paywalls-with-existing-subscriptions",
               "how-to-guides/grant-credits",
               "how-to-guides/proxy-responses",
-              "how-to-guides/configure-profile"
+              "how-to-guides/configure-profile",
+              "how-to-guides/pass-user-id"
             ]
           },
           {

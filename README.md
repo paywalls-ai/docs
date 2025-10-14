@@ -90,7 +90,7 @@ Notes
 ## Docs
 
 - Quickstart: `quickstart.mdx`
-- Pass user identity: `how-to-guides/pass-user-identity.mdx`
+- Pass user identity: `how-to-guides/pass-user-id.mdx`
 - No‑code flows: `how-to-guides/no-code-zapier-n8n-flows.mdx`
 - MCP tools: `how-to-guides/monetize-mcp-tools.mdx`
 - Monetization recipes: `how-to-guides/use-case-monetization-recipes.mdx`
