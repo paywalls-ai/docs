@@ -58,7 +58,8 @@
             "group": "SDKs & Integrations",
             "pages": [
               "sdk-integrations/client-sdks",
-              "sdk-integrations/front-end-widgets"
+              "sdk-integrations/front-end-widgets",
+              "sdk-integrations/posthog-llm-analytics"
             ]
           },
           {

@@ -1,0 +1,52 @@
+---
+title: "PostHog integration"
+---
+
+Connect your Paywalls proxy to PostHog to automatically capture rich LLM analytics — no PostHog SDK or client-side changes required.
+
+## How it works
+
+- Paywalls emits a `$ai_generation` server-side event after every routed request.
+- The distinct ID is resolved from the provided user id, so make sure you pass a stable user identifier such as the `X-Paywall-User` header.
+- Events include latency, token usage, cost breakdowns, request / response metadata, and error flags drawn from the proxy state.
+
+Events are recorded even if the upstream model call fails, enabling funnel and reliability analysis.
+
+## Setup
+
+1. In the Paywalls dashboard, open the paywall you want to analyse.
+2. Navigate to **Configuration → Analytics** and enable the PostHog toggle.
+3. Paste your PostHog `Project API Key`, and add a `Project ID` to annotate events.
+4. Save configuration. No code changes are required in your app.
+
+<Info>
+  This is especially helpful for low-code and no-code stacks (Zapier, n8n,
+  Bubble, Make) where you cannot easily install PostHog libraries.
+</Info>
+
+## Event payload
+
+Each `$ai_generation` event contains the consolidated proxy context. Key properties include:
+
+| Property                                | Description                                                                            |
+| --------------------------------------- | -------------------------------------------------------------------------------------- |
+| `$ai_model`                             | Model name recorded by the upstream provider.                                          |
+| `$ai_provider`                          | Detected provider (`openai`, `anthropic`, `gemini`, `openrouter`, etc.).               |
+| `$ai_input`                             | Sanitized request messages captured by Paywalls (tools removed when privacy requires). |
+| `$ai_output_choices`                    | Sanitized assistant outputs or tool deltas when available.                             |
+| `$ai_input_tokens`, `$ai_output_tokens` | Token counts (prompt / completion) from provider usage metadata.                       |
+| `$ai_latency`                           | Total provider latency in seconds.                                                     |
+| `$ai_http_status`                       | Upstream HTTP status or proxy error code.                                              |
+| `$ai_is_error`, `$ai_error`             | Flags and messages for failed generations.                                             |
+| `$ai_total_cost_usd`                    | Request cost in USD.                                                                   |
+
+## Building dashboards
+
+- Use the `$ai_is_error` flag to build error funnels and monitor vendor reliability.
+- Segment by `$ai_model`, or `$ai_provider` to understand usage patterns.
+- Combine with PostHog notebooks or dashboards to compare LLM costs versus revenue, and trigger alerts when latency spikes.
+
+<Note>
+  Make sure every request to Paywalls includes a stable `user` value. Without
+  it, events are dropped because PostHog requires a distinct ID for analytics.
+</Note>
