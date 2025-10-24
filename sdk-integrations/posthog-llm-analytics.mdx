@@ -2,7 +2,7 @@
 title: "PostHog integration"
 ---
 
-Connect your Paywalls proxy to PostHog to automatically capture rich LLM analytics — no PostHog SDK or client-side changes required.
+Connect your Paywalls proxy to [PostHog](https://posthog.com) to automatically capture rich [LLM analytics](https://posthog.com/docs/llm-analytics) — no PostHog SDK or client-side changes required.
 
 ## How it works
 
@@ -50,3 +50,7 @@ Each `$ai_generation` event contains the consolidated proxy context. Key propert
   Make sure every request to Paywalls includes a stable `user` value. Without
   it, events are dropped because PostHog requires a distinct ID for analytics.
 </Note>
+
+## Related resources
+
+- [PostHog API reference](https://posthog.com/docs/llm-analytics/manual-capture) — learn how `$ai_generation` events are captured.
