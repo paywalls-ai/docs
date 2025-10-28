@@ -11,19 +11,19 @@ Choosing a mode defines how money flows and **can’t be changed later**. Use th
 
 ### Comparison
 
-| Criterion                       | Default (App‑scoped wallet)                                                           | Shared (Cross‑app wallet)                                                     |
-| ------------------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| **Who holds funds**             | Developer (virtual, app‑scoped balance)                                               | End user (shared wallet across apps)                                          |
-| **Who pays the model provider** | **Developer** (BYOK required)                                                         | **Paywalls (built‑in) or BYOK**; end user pays from shared wallet             |
-| **Provider setup**              | **Required**: connect OpenAI, Together, OpenRouter, or any OpenAI‑compatible endpoint | **Optional**: built‑in provider available with no setup; BYOK also supported  |
-| **End‑user authorization**      | Not required                                                                          | Required (user authorizes your paywall)                                       |
-| **Top‑ups / payments**          | Your Stripe (restricted key) or custom rails; auto‑checkout link + auto‑deposit       | Hosted by Paywalls; link provided in assistant message                        |
-| **Cash flow**                   | Funds settle to **your accounts** immediately                                         | Earnings accrue in your **paywall**; withdraw later                           |
-| **Refunds**                     | You control refunds/credits                                                           | Refunds handled via shared wallet / platform rules _(TODO: finalize details)_ |
-| **Portability**                 | Balance usable **only** in your app                                                   | Balance usable **across** Paywalls‑enabled apps                               |
-| **Model catalog**               | Whatever your BYOK provides                                                           | Full OpenRouter catalog via built‑in provider (plus BYOK if desired)          |
-| **Setup time**                  | Minutes (provider + payments)                                                         | Seconds (payments hosted; provider optional)                                  |
-| **Can switch later?**           | **No**                                                                                | **No**                                                                        |
+| Criterion                       | Default (App‑scoped wallet)                                                           | Shared (Cross‑app wallet)                                                    |
+| ------------------------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| **Who holds funds**             | Developer (virtual, app‑scoped balance)                                               | End user (shared wallet across apps)                                         |
+| **Who pays the model provider** | **Developer** (BYOK required)                                                         | **Paywalls (built‑in) or BYOK**; end user pays from shared wallet            |
+| **Provider setup**              | **Required**: connect OpenAI, Together, OpenRouter, or any OpenAI‑compatible endpoint | **Optional**: built‑in provider available with no setup; BYOK also supported |
+| **End‑user authorization**      | Not required                                                                          | Required (user authorizes your paywall)                                      |
+| **Top‑ups / payments**          | Your Stripe (restricted key) or custom rails; auto‑checkout link + auto‑deposit       | Hosted by Paywalls; link provided in assistant message                       |
+| **Cash flow**                   | Funds settle to **your accounts** immediately                                         | Earnings accrue in your **paywall**; withdraw later                          |
+| **Refunds**                     | You control refunds/credits                                                           | Refunds handled via shared wallet / platform rules                           |
+| **Portability**                 | Balance usable **only** in your app                                                   | Balance usable **across** Paywalls‑enabled apps                              |
+| **Model catalog**               | Whatever your BYOK provides                                                           | Full OpenRouter catalog via built‑in provider (plus BYOK if desired)         |
+| **Setup time**                  | Minutes (provider + payments)                                                         | Seconds (payments hosted; provider optional)                                 |
+| **Can switch later?**           | **No**                                                                                | **No**                                                                       |
 
 ### Use this if…
 
