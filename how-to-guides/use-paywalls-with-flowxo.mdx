@@ -1,0 +1,379 @@
+---
+title: "Use Paywalls with FlowXO"
+description: "FlowXO Integration Step-by-Step"
+---
+
+<Info>
+  [FlowXO](https://flowxo.com/) is a **no-code platform** for building and
+  automating **AI-powered chatbots**. It enables businesses to deploy
+  intelligent bots across websites, WhatsApp, and Messenger that use built-in AI
+  to understand user **intent**, detect **entities** (like dates or locations),
+  analyze **sentiment**, and connect to **knowledge bases** to provide
+  automated, human-like responses for customer support and sales.
+</Info>
+
+Integrating FlowXO with Paywalls.ai allows you to **monetize your AI chatbot** on a per-interaction or subscription basis.
+
+Instead of just offering your chatbot for free, this integration places an intelligent "paywall" in front of it. This lets you:
+
+- **Charge Users in Real-Time:** Automatically meter usage and charge for access to your bot's advanced AI features or knowledge bases.
+- **Run Dynamic Experiments:** Easily A/B test different pricing models, offer free trials, or reward loyal users with free access, all without recoding your bot.
+- **Gate Premium Content:** Use the bot as a gateway, only providing high-value answers, detailed reports, or access to specific functions after a user has paid.
+
+Essentially, it turns your FlowXO chatbot from a free support or engagement tool into a **direct revenue-generating product**.
+
+<Tip>
+**To celebrate our partnership with FlowXO, we’re launching our first AI Hackathon - From Prototype to Profit.** 🚀
+
+If you think you have what it takes, make sure you participate in the hackathon. Registrations are open, we’re eager to see what you’ll build with this powerful integration.
+
+👉 [Register here](https://eventornado.com/event/paywalls-hackathon1#home)
+
+</Tip>
+
+# How to integrate your Paywall with FlowXO
+
+<iframe
+  src="https://www.veed.io/embed/34ed6098-9b4f-423c-9e28-0672122c6b73"
+  className="w-full h-96 rounded-xl"
+  frameborder="0"
+  title="[DEMO Paywalls AI] How to Create Paywall and integrate with FlowXO"
+  webkitallowfullscreen
+  mozallowfullscreen
+  allowfullscreen
+></iframe>
+
+## Step 1 - Create your Paywall
+
+<Steps>
+
+<Step title="Sign in">
+
+Sign in to [paywalls.ai dashboard](https://dashboard.paywalls.ai)
+
+</Step>
+
+<Step title="Create Paywall">
+
+<Columns cols={2}>
+
+Click on `Create Paywall` button
+
+![how to create a paywall](/images/use-paywalls-with-flowxo/screenshot-1.png)
+
+</Columns>
+
+</Step>
+
+<Step title="Choose payment provider">
+
+<Columns cols={2}>
+
+<div>
+
+Stripe or Paywalls: Here is where you will receive your payments, if you choose Stripe, payments will be made directly to your Stripe account. To connect stripe you only need to provide the Restricted API Key from your Stripe account.
+
+<br />
+<br />
+If you don’t have a Stripe account, you can choose Paywalls, and we will provide
+our shared payment method, once users start using your solution, your paywall
+balance will increase, and you can withdraw your balance anytime.
+
+</div>
+
+![how to choose payment provider](/images/use-paywalls-with-flowxo/screenshot-2.png)
+
+</Columns>
+
+</Step>
+
+<Step title="Choose your AI Provider">
+
+<Columns cols={2}>
+
+<div>
+Choose the LLM you want to connect to (OpenAI, Antrhopic, OpenRouter, TogehterAI, Paywalls, or any other OpenAI compatible LLM like Gemini). This setup is extremely easy, you only need to provide your api key and that’s all.
+
+<br />
+<br />
+If you don’t have an api you can choose Paywalls and we will provide the LLM for
+you, instantly getting access to +300 ai models from top-notch providers such as
+OpenAI, Antrhopic, Gemini, Deepseek, and more.
+
+</div>
+
+![choosing LLM](/images/use-paywalls-with-flowxo/screenshot-3.png)
+
+</Columns>
+
+</Step>
+
+<Step title="Add your pricing">
+
+<Columns cols={2}>
+
+<div>
+You earn by adding a markup on top of the LLM cost. Example: If usage costs \$1 and your markup is 20%, users pay \$1.20. From this, \$1 will go to the LLM provider to cover for the usage and \$0.20 will go directly to your paywalls balance, which you can withdraw anytime.
+
+<br />
+<br />
+In this setup you can also add trial credits for your users, so they can try your AI solution for free up to a certain usage. For example, if you choose to give \$1 of free trial credits, your users will be able to use your solution for free, until they spend \$1 of AI usage, then they will have to pay.
+</div>
+
+![choosing pricing](/images/use-paywalls-with-flowxo/screenshot-4.png)
+
+</Columns>
+
+</Step>
+
+<Step title="Add your integrations">
+
+<Columns cols={2}>
+
+You can integrate with Analytics tools like PostHog, with CRM tools like HubSpot (soon), with User Management tools like Clerk (soon). You can also setup a webhook to implement custom logics on any system of your choice (soon).
+
+![choosing integrations](/images/use-paywalls-with-flowxo/screenshot-5.png)
+
+</Columns>
+
+</Step>
+
+<Step title="Your paywall is live">
+
+<Columns cols={2}>
+
+You will get an API URL and an API Key, which you can use later to integrate your paywall into your AI Solution.
+
+![paywall is live](/images/use-paywalls-with-flowxo/screenshot-6.png)
+
+</Columns>
+
+</Step>
+
+</Steps>
+
+## Step 2 - Connect your paywall to FlowXO
+
+<Steps>
+
+<Step title="Sign in">
+
+Sign in to [Flowxo.com](http://Flowxo.com)
+
+</Step>
+
+<Step title="Navigate to AI Connections">
+
+<Columns cols={2}>
+
+In your sidebar you will see your username at the bottom, click on it, and you will see a submenu, click on “AI Connections”.
+
+![navigate to flowxo ai connections](/images/use-paywalls-with-flowxo/screenshot-7.png)
+
+</Columns>
+
+</Step>
+
+<Step title="Create your AI Connection">
+
+<Columns cols={2}>
+
+Click on `+ New AI Connection`
+
+![new ai connection](/images/use-paywalls-with-flowxo/screenshot-8.png)
+
+</Columns>
+
+</Step>
+
+<Step title="Configure your AI Connection">
+
+<Columns cols={2}>
+
+Give your AI connection a name and a description. Then, make sure you choose “OpenAI” as provider. Copy-Paste your API key from your Paywall and the API URL from your Paywall `https://api.paywalls.ai/v1`
+
+![configure ai connection](/images/use-paywalls-with-flowxo/screenshot-9.png)
+
+</Columns>
+
+</Step>
+
+<Step title="Save your AI Connection">
+
+<Columns cols={2}>
+
+Now that your AI Connection is set, you can now proceed to create your AI Assistant. For this, you just need to click on AI Assistants on your sidebar
+
+![save ai connection](/images/use-paywalls-with-flowxo/screenshot-10.png)
+
+</Columns>
+
+</Step>
+
+<Step title="Create your AI Assistant">
+
+<Columns cols={2}>
+
+Click on `+ New Assistant` to create a new AI Assistant
+
+![create new assistant](/images/use-paywalls-with-flowxo/screenshot-11.png)
+
+</Columns>
+
+</Step>
+
+<Step title="Configure your AI Assistant">
+
+<Columns cols={2}>
+
+<div>
+Now you only need to configure your assistant. Give it a name and a description. Give it a Goal, so the AI knows whats its main objective and what it needs to achieve.
+
+<br />
+<br />
+You can also configure the Persona, which is the personality that the assistant
+will embody. And a set of instructions, which is the system prompt, how the
+assistant will achieve its goal, and how it should interact with the user.
+
+</div>
+
+![configure ai assistant](/images/use-paywalls-with-flowxo/screenshot-12.png)
+
+</Columns>
+
+</Step>
+
+<Step title="Configure your AI Assistant">
+
+<Columns cols={2}>
+
+<div>
+You can also configure user description, which will introduce your users to the assistant. You need to choose the AI model you want to use, and the AI connection.
+
+<br />
+<br />
+Make sure you choose the AI connection that you’ve configured before, which has
+your paywall integrated, so you can instantly charge your users for the
+interactions.{" "}
+
+<br />
+<br />
+You can also setup Max History messages, Idle timeout and Voice responses.
+
+</div>
+
+![configure ai assistant](/images/use-paywalls-with-flowxo/screenshot-13.png)
+
+</Columns>
+
+</Step>
+
+<Step title="Configure Output fields and Tools">
+
+<Columns cols={2}>
+
+<div>
+Last but not least, you can configure Output fields and Tools. The output fields are pieces of information that you want your assistant to extract and store during the interaction.
+
+<br />
+<br />
+And the tools will become very useful when building more complex logics, you can
+enable the assistant to query a file from your knowledge base, or search on a
+website page, you can enable deterministic flows that you have configured in
+your FlowXO account, image generations, menus, pass the conversation to a live
+agent (a human) or even add another assistant as a tool to manage a sub-flow or
+open up a sub thread on your conversation.
+
+</div>
+
+![output fields and tools](/images/use-paywalls-with-flowxo/screenshot-14.png)
+
+</Columns>
+
+</Step>
+
+<Step title="Save your AI Assistant">
+
+Once you’re all set you just need to click on Create assistant at the bottom of the page and your assistant will be ready. You can test your assistant right there in the FlowXO interface and edit your assistant anytime.
+
+</Step>
+
+</Steps>
+
+## Step 3 - Create your bot
+
+<Steps>
+
+<Step title="Navigate to Bots">
+
+<Columns cols={2}>
+
+In your sidebar, click on “Bots”. Then click on `+ New` to create a new bot.
+
+![new bot](/images/use-paywalls-with-flowxo/screenshot-15.png)
+
+</Columns>
+
+</Step>
+
+<Step title="Choose your platform">
+
+<Columns cols={2}>
+
+Choose your platform, where you want your bot to operate.
+
+![choose platform](/images/use-paywalls-with-flowxo/screenshot-16.png)
+
+</Columns>
+
+</Step>
+
+<Step title="Configure your bot">
+
+<Columns cols={2}>
+
+<div>
+Depending on which platform you choose , the setup will vary a little bit, for this example we will use a web[beta] bot. You will need to give it a name and optionally a welcome text. Then, you will see an option to assign an assistant to it, it is very important that you select the assistant that you’ve just created.
+
+<br />
+<br />
+You can also change its colors and setup an avatar for your bot, which is the
+image that your users will see when they interact with your bot. Once you’re all
+set you can click on “Next” to finish the setup.
+
+</div>
+
+![configure bot](/images/use-paywalls-with-flowxo/screenshot-17.png)
+
+</Columns>
+
+</Step>
+
+<Step title="Test and distribute your bot">
+
+<Columns cols={2}>
+
+<div>
+You will see different options to test and distribute your bot, you can open the URL thats provided on “Option 1” in your browser, and you’ll have a chat interface where you can interact with your bot.
+
+<br />
+<br />
+Alternatively, you have the option to embed your bot as an iframe on the body of
+any website page, and/or add it as a widget to your website. It’s very simple,
+you just need to copy/paste the snippet of code that’s provided and everything
+will work instantly.
+
+</div>
+
+![test and distribute bot](/images/use-paywalls-with-flowxo/screenshot-18.png)
+
+</Columns>
+
+</Step>
+
+</Steps>
+
+<Check>
+  **Now your FlowXO bot is connected to your Paywalls.ai paywall, and you can
+  start monetizing your AI chatbot by charging users for their interactions!**
+</Check>
