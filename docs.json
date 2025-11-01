@@ -37,7 +37,7 @@
             ]
           },
           {
-            "group": "How‑to guides",
+            "group": "How\u2011to guides",
             "pages": [
               "how-to-guides/choose-a-mode",
               "how-to-guides/configure-billing",
@@ -52,7 +52,8 @@
               "how-to-guides/proxy-responses",
               "how-to-guides/configure-profile",
               "how-to-guides/pass-user-id",
-              "how-to-guides/use-paywalls-with-flowxo"
+              "how-to-guides/use-paywalls-with-flowxo",
+              "how-to-guides/webhooks"
             ]
           },
           {
@@ -103,6 +104,48 @@
               "api-reference/user/connect/get",
               "api-reference/user/disconnect/get"
             ]
+          },
+          {
+            "group": "Webhooks",
+            "pages": [
+              "api-reference/webhooks/subscriptions/post",
+              "api-reference/webhooks/subscriptions/get",
+              "api-reference/webhooks/subscriptions/[subscriptionId]/get",
+              "api-reference/webhooks/subscriptions/[subscriptionId]/delete",
+              "api-reference/webhooks/logs/get"
+            ]
+          },
+          {
+            "group": "Webhook events",
+            "pages": [
+              "api-reference/webhooks/events/paywall-updated",
+              "api-reference/webhooks/events/paywall-archived",
+              "api-reference/webhooks/events/paywall-secret-rotated",
+              "api-reference/webhooks/events/paywall-integration-connected",
+              "api-reference/webhooks/events/paywall-integration-disconnected",
+              "api-reference/webhooks/events/paywall-integration-stripe-webhook-rotated",
+              "api-reference/webhooks/events/paywall-authorization-requested",
+              "api-reference/webhooks/events/paywall-authorization-completed",
+              "api-reference/webhooks/events/paywall-authorization-revoked",
+              "api-reference/webhooks/events/paywall-authorization-declined",
+              "api-reference/webhooks/events/paywall-balance-deposit-created",
+              "api-reference/webhooks/events/paywall-balance-topup-link-created",
+              "api-reference/webhooks/events/paywall-balance-trial-granted",
+              "api-reference/webhooks/events/paywall-balance-charge-created",
+              "api-reference/webhooks/events/paywall-balance-charge-completed",
+              "api-reference/webhooks/events/paywall-balance-charge-failed",
+              "api-reference/webhooks/events/paywall-usage-charge-created",
+              "api-reference/webhooks/events/paywall-usage-charge-deferred",
+              "api-reference/webhooks/events/paywall-usage-rate-limited",
+              "api-reference/webhooks/events/paywall-balance-depleted",
+              "api-reference/webhooks/events/paywall-request-blocked",
+              "api-reference/webhooks/events/paywall-stripe-checkout-session-completed",
+              "api-reference/webhooks/events/paywall-proxy-request-started",
+              "api-reference/webhooks/events/paywall-proxy-request-completed",
+              "api-reference/webhooks/events/paywall-proxy-request-failed",
+              "api-reference/webhooks/events/paywall-proxy-request-canceled",
+              "api-reference/webhooks/events/paywall-proxy-request-blocked"
+            ]
           }
         ]
       }
@@ -143,9 +186,9 @@
   "footer": {
     "socials": {
       "website": "https://paywalls.ai",
-      "x": "https://x.com",
+      "x": "https://x.com/paywallsai",
       "github": "https://github.com/paywalls-ai",
-      "linkedin": "https://linkedin.com"
+      "linkedin": "https://www.linkedin.com/company/paywalls-ai"
     },
     "links": [
       {

@@ -1,18 +1,14 @@
 {
-  "openapi": "3.0.0",
+  "openapi": "3.1.0",
   "info": {
     "title": "Paywalls.ai API",
-    "description": "The Paywalls.ai API enables developers to integrate monetization and access control for OpenAI-compatible LLMs.\n\nThis proxy service supports multiple pricing strategies—including per-request, token-based, and subscription models—while maintaining full compatibility with the OpenAI API format.\n\nRequests are automatically checked for user authorization and balance. If the user is not connected to the paywall, or lacks sufficient balance, the API will return actionable links for onboarding or top-up.\n\nUse this API to monetize your AI-powered apps and services with minimal effort.\n\nVisit [paywalls.ai](https://docs.paywalls.ai) for full documentation and setup guides.\n",
+    "description": "The Paywalls.ai API enables developers to integrate monetization and access control for OpenAI-compatible LLMs.\n\nThis proxy service supports multiple pricing strategies\u2014including per-request, token-based, and subscription models\u2014while maintaining full compatibility with the OpenAI API format.\n\nRequests are automatically checked for user authorization and balance. If the user is not connected to the paywall, or lacks sufficient balance, the API will return actionable links for onboarding or top-up.\n\nUse this API to monetize your AI-powered apps and services with minimal effort.\n\nVisit [paywalls.ai](https://docs.paywalls.ai) for full documentation and setup guides.\n",
     "version": "1.0.0"
   },
   "servers": [
     {
       "url": "https://api.paywalls.ai/v1",
       "description": "Primary production server"
-    },
-    {
-      "url": "https://aventino-staging.grindery.com/api/v1",
-      "description": "Staging server for development and testing"
     }
   ],
   "security": [
@@ -32,6 +28,10 @@
     {
       "name": "User",
       "description": "Endpoints for managing user sessions, balance, and charging status.\n\nIncludes functionality for connecting to or disconnecting from the paywall, checking balance, initiating top-ups, and issuing manual charges.\n"
+    },
+    {
+      "name": "Webhooks",
+      "description": "Manage webhook subscriptions and inspect delivery activity for your paywall integrations.\n"
     }
   ],
   "paths": {
@@ -39,7 +39,9 @@
       "post": {
         "summary": "Proxy a chat completion request with automatic paywall enforcement",
         "description": "This endpoint proxies an OpenAI-compatible chat completion request and charges the user based on the configured monetization model (per request, per token, etc).\n\nIf the user is not connected to the paywall, the response will contain a connection link.\n\nIf the user is connected but has insufficient balance, a top-up link is returned.\n\nOn success, the request is forwarded to the underlying model provider and the result is returned.\n",
-        "tags": ["Chat"],
+        "tags": [
+          "Chat"
+        ],
         "parameters": [
           {
             "$ref": "#/components/parameters/XPaywallUser"
@@ -73,7 +75,10 @@
                     "default": false
                   }
                 },
-                "required": ["model", "messages"]
+                "required": [
+                  "model",
+                  "messages"
+                ]
               }
             }
           }
@@ -135,7 +140,9 @@
       "get": {
         "summary": "Retrieve available LLM models",
         "description": "Lists all models available through the proxy, including pricing information per model.\n\nUseful for frontend model selectors or pricing calculators.\n",
-        "tags": ["Models"],
+        "tags": [
+          "Models"
+        ],
         "parameters": [
           {
             "$ref": "#/components/parameters/XPaywallUser"
@@ -157,7 +164,9 @@
                       }
                     }
                   },
-                  "required": ["data"],
+                  "required": [
+                    "data"
+                  ],
                   "example": {
                     "data": [
                       {
@@ -183,9 +192,11 @@
     },
     "/user/balance": {
       "get": {
-        "summary": "Retrieve the user’s current balance",
+        "summary": "Retrieve the user\u2019s current balance",
         "description": "Returns the current prepaid balance for the user, both in raw units and a formatted string.\n\nUse this to determine whether a user can afford new API requests or needs a top-up.\n",
-        "tags": ["User"],
+        "tags": [
+          "User"
+        ],
         "parameters": [
           {
             "$ref": "#/components/parameters/XPaywallUser"
@@ -228,7 +239,9 @@
       "get": {
         "summary": "Get a top-up link for adding user funds",
         "description": "Returns a link the user can visit to top up their balance. \n\nThis is typically used when a request is rejected due to insufficient funds.\n",
-        "tags": ["User"],
+        "tags": [
+          "User"
+        ],
         "parameters": [
           {
             "$ref": "#/components/parameters/XPaywallUser"
@@ -267,7 +280,9 @@
       "post": {
         "summary": "Manually charge a user for a specific amount",
         "description": "Charges a specific user an arbitrary amount (in USDC equivalent), if the user is connected and has sufficient balance.\n\nThis can be used for non-standard billing scenarios such as one-time feature unlocks or external usage tracking.\n",
-        "tags": ["User"],
+        "tags": [
+          "User"
+        ],
         "parameters": [
           {
             "$ref": "#/components/parameters/XPaywallUser"
@@ -320,7 +335,9 @@
       "get": {
         "summary": "Check user connection status to the paywall",
         "description": "Checks whether a user is currently connected (i.e., has authorized charging).\n\nIf not connected, a `url` field will be returned to redirect the user to the connection flow (e.g., a consent or wallet approval page).\n",
-        "tags": ["User"],
+        "tags": [
+          "User"
+        ],
         "parameters": [
           {
             "$ref": "#/components/parameters/XPaywallUser"
@@ -359,8 +376,10 @@
     "/user/disconnect": {
       "get": {
         "summary": "Disconnect the user from the paywall",
-        "description": "Revokes the user’s charging authorization and disconnects them from the paywall.\n\nAfter this, any charge or request requiring payment will return a connection link instead of proceeding.\n",
-        "tags": ["User"],
+        "description": "Revokes the user\u2019s charging authorization and disconnects them from the paywall.\n\nAfter this, any charge or request requiring payment will return a connection link instead of proceeding.\n",
+        "tags": [
+          "User"
+        ],
         "parameters": [
           {
             "$ref": "#/components/parameters/XPaywallUser"
@@ -403,7 +422,9 @@
       "post": {
         "summary": "Deposit credits into a user's virtual balance",
         "description": "This endpoint allows you to deposit credits into a user's virtual balance.\nThis is only applicable if the paywall is configured in \"default\" mode.\nDeposits will increase the user's balance, allowing them to make requests against the paywall.\n",
-        "tags": ["User"],
+        "tags": [
+          "User"
+        ],
         "parameters": [
           {
             "$ref": "#/components/parameters/XPaywallUser"
@@ -451,6 +472,2063 @@
           }
         }
       }
+    },
+    "/webhooks/subscriptions": {
+      "get": {
+        "summary": "List webhook subscriptions",
+        "description": "Returns every webhook subscription configured for the authenticated paywall. Filter by active status with the `status` query parameter.\n",
+        "tags": [
+          "Webhooks"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "description": "Filter results by subscription status.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "inactive"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of webhook subscriptions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "subscriptions": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/WebhookSubscription"
+                      }
+                    }
+                  },
+                  "required": [
+                    "subscriptions"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a webhook subscription",
+        "description": "Registers a new webhook endpoint for the authenticated paywall. Provide an HTTPS URL and one or more event types (or `*` for all events). The full signing secret is returned only once at creation time.\n",
+        "tags": [
+          "Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebhookSubscriptionCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Webhook subscription created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "subscription": {
+                      "$ref": "#/components/schemas/WebhookSubscription"
+                    }
+                  },
+                  "required": [
+                    "subscription"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhooks/subscriptions/{subscriptionId}": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "subscriptionId",
+          "required": true,
+          "description": "Unique identifier of the webhook subscription.",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Retrieve a webhook subscription",
+        "description": "Returns the latest configuration for the specified subscription.\n",
+        "tags": [
+          "Webhooks"
+        ],
+        "responses": {
+          "200": {
+            "description": "Subscription details.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "subscription": {
+                      "$ref": "#/components/schemas/WebhookSubscription"
+                    }
+                  },
+                  "required": [
+                    "subscription"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deactivate a webhook subscription",
+        "description": "Marks the subscription as inactive to stop future deliveries.\n",
+        "tags": [
+          "Webhooks"
+        ],
+        "responses": {
+          "200": {
+            "description": "Subscription deactivated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deactivated": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "subscription": {
+                      "$ref": "#/components/schemas/WebhookSubscription"
+                    }
+                  },
+                  "required": [
+                    "deactivated",
+                    "subscription"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhooks/logs": {
+      "get": {
+        "summary": "List webhook delivery logs",
+        "description": "Returns recent webhook delivery attempts for the authenticated paywall. Filter by subscription, status, event type, or adjust the number of records returned.\n",
+        "tags": [
+          "Webhooks"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "subscriptionId",
+            "required": false,
+            "description": "Limit results to deliveries tied to a specific subscription.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "description": "Filter by delivery status.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "success",
+                "error"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "eventType",
+            "required": false,
+            "description": "Filter by a specific event type key (e.g. `paywall.updated`).",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "description": "Number of records to return (default 20, max 100).",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook delivery attempts.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "logs": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/WebhookDeliveryLog"
+                      }
+                    }
+                  },
+                  "required": [
+                    "logs"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {
+    "paywall.updated": {
+      "post": {
+        "operationId": "on_paywall_updated",
+        "summary": "Paywall updated",
+        "description": "Triggered whenever a paywall's settings are changed.\n\nProvides a compact diff summary so audit and notification systems know which parts of the configuration moved.\n\n**Payload fields**: `paywallId`, `ownerUserId`, `changedFields`, `summarySections`.",
+        "tags": [
+          "Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PaywallEvent"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "paywall.updated"
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Payload fields: paywallId, ownerUserId, changedFields, summarySections."
+                      }
+                    },
+                    "required": [
+                      "data"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "example": {
+                  "summary": "Sample payload",
+                  "value": {
+                    "id": "paywall_updated_evt_123",
+                    "paywallId": "pw_live_123",
+                    "ownerUserId": "usr_owner_789",
+                    "type": "paywall.updated",
+                    "version": "2024-05-01",
+                    "createdAt": "2024-05-01T12:34:56Z",
+                    "status": "pending",
+                    "attempts": 1,
+                    "data": {
+                      "paywallId": "pw_live_123",
+                      "ownerUserId": "usr_owner_789",
+                      "changedFields": [
+                        "pricing.mode",
+                        "limits.maxRequests"
+                      ],
+                      "summarySections": [
+                        "Pricing mode switched from tokens to requests",
+                        "Max requests increased from 1000 to 2000"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx to acknowledge receipt."
+          }
+        }
+      }
+    },
+    "paywall.archived": {
+      "post": {
+        "operationId": "on_paywall_archived",
+        "summary": "Paywall archived",
+        "description": "Triggered when a paywall is moved to the archived state.\n\nSignals that traffic should be shut down or hidden because the paywall transitioned into an archived state.\n\n**Payload fields**: `paywallId`, `ownerUserId`, `reason`.",
+        "tags": [
+          "Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PaywallEvent"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "paywall.archived"
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Payload fields: paywallId, ownerUserId, reason."
+                      }
+                    },
+                    "required": [
+                      "data"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "example": {
+                  "summary": "Sample payload",
+                  "value": {
+                    "id": "paywall_archived_evt_123",
+                    "paywallId": "pw_live_123",
+                    "ownerUserId": "usr_owner_789",
+                    "type": "paywall.archived",
+                    "version": "2024-05-01",
+                    "createdAt": "2024-05-01T12:34:56Z",
+                    "status": "pending",
+                    "attempts": 1,
+                    "data": {
+                      "paywallId": "pw_live_123",
+                      "ownerUserId": "usr_owner_789",
+                      "reason": "Paywall sunset after migration"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx to acknowledge receipt."
+          }
+        }
+      }
+    },
+    "paywall.secret.rotated": {
+      "post": {
+        "operationId": "on_paywall_secret_rotated",
+        "summary": "Paywall secret rotated",
+        "description": "Triggered when the API secret for a paywall is regenerated.\n\nEnables credential stores to roll keys after a paywall secret was regenerated.\n\n**Payload fields**: `paywallId`, `ownerUserId`, `secretLastFour`, `actorId`, `actorType`.",
+        "tags": [
+          "Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PaywallEvent"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "paywall.secret.rotated"
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Payload fields: paywallId, ownerUserId, secretLastFour, actorId, actorType."
+                      }
+                    },
+                    "required": [
+                      "data"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "example": {
+                  "summary": "Sample payload",
+                  "value": {
+                    "id": "paywall_secret_rotated_evt_123",
+                    "paywallId": "pw_live_123",
+                    "ownerUserId": "usr_owner_789",
+                    "type": "paywall.secret.rotated",
+                    "version": "2024-05-01",
+                    "createdAt": "2024-05-01T12:34:56Z",
+                    "status": "pending",
+                    "attempts": 1,
+                    "data": {
+                      "paywallId": "pw_live_123",
+                      "ownerUserId": "usr_owner_789",
+                      "secretLastFour": "8f3c",
+                      "actorId": "usr_admin_321",
+                      "actorType": "user"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx to acknowledge receipt."
+          }
+        }
+      }
+    },
+    "paywall.integration.connected": {
+      "post": {
+        "operationId": "on_paywall_integration_connected",
+        "summary": "Integration connected",
+        "description": "Triggered when an integration is switched on for a paywall.\n\nBroadcasts that a third-party integration is now active so provisioning hooks can run.\n\n**Payload fields**: `paywallId`, `ownerUserId`, `integrationKey`, `enabledBy`.",
+        "tags": [
+          "Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PaywallEvent"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "paywall.integration.connected"
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Payload fields: paywallId, ownerUserId, integrationKey, enabledBy."
+                      }
+                    },
+                    "required": [
+                      "data"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "example": {
+                  "summary": "Sample payload",
+                  "value": {
+                    "id": "paywall_integration_connected_evt_123",
+                    "paywallId": "pw_live_123",
+                    "ownerUserId": "usr_owner_789",
+                    "type": "paywall.integration.connected",
+                    "version": "2024-05-01",
+                    "createdAt": "2024-05-01T12:34:56Z",
+                    "status": "pending",
+                    "attempts": 1,
+                    "data": {
+                      "paywallId": "pw_live_123",
+                      "ownerUserId": "usr_owner_789",
+                      "integrationKey": "posthog",
+                      "enabledBy": "usr_admin_321"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx to acknowledge receipt."
+          }
+        }
+      }
+    },
+    "paywall.integration.disconnected": {
+      "post": {
+        "operationId": "on_paywall_integration_disconnected",
+        "summary": "Integration disconnected",
+        "description": "Triggered when an integration is switched off for a paywall.\n\nLets dependants know an integration was turned off and follow-up cleanup may be required.\n\n**Payload fields**: `paywallId`, `ownerUserId`, `integrationKey`, `disabledBy`.",
+        "tags": [
+          "Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PaywallEvent"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "paywall.integration.disconnected"
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Payload fields: paywallId, ownerUserId, integrationKey, disabledBy."
+                      }
+                    },
+                    "required": [
+                      "data"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "example": {
+                  "summary": "Sample payload",
+                  "value": {
+                    "id": "paywall_integration_disconnected_evt_123",
+                    "paywallId": "pw_live_123",
+                    "ownerUserId": "usr_owner_789",
+                    "type": "paywall.integration.disconnected",
+                    "version": "2024-05-01",
+                    "createdAt": "2024-05-01T12:34:56Z",
+                    "status": "pending",
+                    "attempts": 1,
+                    "data": {
+                      "paywallId": "pw_live_123",
+                      "ownerUserId": "usr_owner_789",
+                      "integrationKey": "posthog",
+                      "disabledBy": "usr_admin_321"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx to acknowledge receipt."
+          }
+        }
+      }
+    },
+    "paywall.integration.stripe.webhook.rotated": {
+      "post": {
+        "operationId": "on_paywall_integration_stripe_webhook_rotated",
+        "summary": "Stripe webhook rotated",
+        "description": "Triggered when a new Stripe webhook endpoint is created for a paywall.\n\nKeeps billing operators in sync when Stripe webhook endpoints are recreated or rotated.\n\n**Payload fields**: `paywallId`, `ownerUserId`, `webhookId`, `url`, `secretSuffix`.",
+        "tags": [
+          "Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PaywallEvent"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "paywall.integration.stripe.webhook.rotated"
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Payload fields: paywallId, ownerUserId, webhookId, url, secretSuffix."
+                      }
+                    },
+                    "required": [
+                      "data"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "example": {
+                  "summary": "Sample payload",
+                  "value": {
+                    "id": "paywall_integration_stripe_webhook_rotated_evt_123",
+                    "paywallId": "pw_live_123",
+                    "ownerUserId": "usr_owner_789",
+                    "type": "paywall.integration.stripe.webhook.rotated",
+                    "version": "2024-05-01",
+                    "createdAt": "2024-05-01T12:34:56Z",
+                    "status": "pending",
+                    "attempts": 1,
+                    "data": {
+                      "paywallId": "pw_live_123",
+                      "ownerUserId": "usr_owner_789",
+                      "webhookId": "wh_stripe_456",
+                      "url": "https://hooks.stripe.com/webhook/paywalls/123",
+                      "secretSuffix": "42fa"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx to acknowledge receipt."
+          }
+        }
+      }
+    },
+    "paywall.authorization.requested": {
+      "post": {
+        "operationId": "on_paywall_authorization_requested",
+        "summary": "Authorization requested",
+        "description": "Triggered when a user approval request is created for your paywall.\n\nSignals that a user needs to approve access, allowing apps to surface a relevant call-to-action.\n\n**Payload fields**: `paywallId`, `ownerUserId`, `externalUserId`, `walletUserId`, `requestId`, `approvalUrl`, `mode`.",
+        "tags": [
+          "Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PaywallEvent"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "paywall.authorization.requested"
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Payload fields: paywallId, ownerUserId, externalUserId, walletUserId, requestId, approvalUrl, mode."
+                      }
+                    },
+                    "required": [
+                      "data"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "example": {
+                  "summary": "Sample payload",
+                  "value": {
+                    "id": "paywall_authorization_requested_evt_123",
+                    "paywallId": "pw_live_123",
+                    "ownerUserId": "usr_owner_789",
+                    "type": "paywall.authorization.requested",
+                    "version": "2024-05-01",
+                    "createdAt": "2024-05-01T12:34:56Z",
+                    "status": "pending",
+                    "attempts": 1,
+                    "data": {
+                      "paywallId": "pw_live_123",
+                      "ownerUserId": "usr_owner_789",
+                      "externalUserId": "external_456",
+                      "walletUserId": "wallet_123",
+                      "requestId": "req_auth_789",
+                      "approvalUrl": "https://paywalls.ai/connect/req_auth_789",
+                      "mode": "live"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx to acknowledge receipt."
+          }
+        }
+      }
+    },
+    "paywall.authorization.completed": {
+      "post": {
+        "operationId": "on_paywall_authorization_completed",
+        "summary": "Authorization completed",
+        "description": "Triggered when a user successfully connects to your paywall.\n\nConfirms a user granted permissions so downstream systems can unlock premium features.\n\n**Payload fields**: `paywallId`, `ownerUserId`, `externalUserId`, `walletUserId`, `connectionId`.",
+        "tags": [
+          "Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PaywallEvent"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "paywall.authorization.completed"
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Payload fields: paywallId, ownerUserId, externalUserId, walletUserId, connectionId."
+                      }
+                    },
+                    "required": [
+                      "data"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "example": {
+                  "summary": "Sample payload",
+                  "value": {
+                    "id": "paywall_authorization_completed_evt_123",
+                    "paywallId": "pw_live_123",
+                    "ownerUserId": "usr_owner_789",
+                    "type": "paywall.authorization.completed",
+                    "version": "2024-05-01",
+                    "createdAt": "2024-05-01T12:34:56Z",
+                    "status": "pending",
+                    "attempts": 1,
+                    "data": {
+                      "paywallId": "pw_live_123",
+                      "ownerUserId": "usr_owner_789",
+                      "externalUserId": "external_456",
+                      "walletUserId": "wallet_123",
+                      "connectionId": "conn_555"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx to acknowledge receipt."
+          }
+        }
+      }
+    },
+    "paywall.authorization.revoked": {
+      "post": {
+        "operationId": "on_paywall_authorization_revoked",
+        "summary": "Authorization revoked",
+        "description": "Triggered when an existing user connection is removed from your paywall.\n\nNotifies consumers that a previously authorized user should no longer be charged.\n\n**Payload fields**: `paywallId`, `ownerUserId`, `externalUserId`, `walletUserId`.",
+        "tags": [
+          "Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PaywallEvent"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "paywall.authorization.revoked"
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Payload fields: paywallId, ownerUserId, externalUserId, walletUserId."
+                      }
+                    },
+                    "required": [
+                      "data"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "example": {
+                  "summary": "Sample payload",
+                  "value": {
+                    "id": "paywall_authorization_revoked_evt_123",
+                    "paywallId": "pw_live_123",
+                    "ownerUserId": "usr_owner_789",
+                    "type": "paywall.authorization.revoked",
+                    "version": "2024-05-01",
+                    "createdAt": "2024-05-01T12:34:56Z",
+                    "status": "pending",
+                    "attempts": 1,
+                    "data": {
+                      "paywallId": "pw_live_123",
+                      "ownerUserId": "usr_owner_789",
+                      "externalUserId": "external_456",
+                      "walletUserId": "wallet_123"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx to acknowledge receipt."
+          }
+        }
+      }
+    },
+    "paywall.authorization.declined": {
+      "post": {
+        "operationId": "on_paywall_authorization_declined",
+        "summary": "Authorization declined",
+        "description": "Triggered when a user declines an authorization request.\n\nSurfaces a declined approval so customer success teams can follow up or adjust onboarding.\n\n**Payload fields**: `paywallId`, `ownerUserId`, `externalUserId`, `walletUserId`, `requestId`, `reason`.",
+        "tags": [
+          "Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PaywallEvent"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "paywall.authorization.declined"
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Payload fields: paywallId, ownerUserId, externalUserId, walletUserId, requestId, reason."
+                      }
+                    },
+                    "required": [
+                      "data"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "example": {
+                  "summary": "Sample payload",
+                  "value": {
+                    "id": "paywall_authorization_declined_evt_123",
+                    "paywallId": "pw_live_123",
+                    "ownerUserId": "usr_owner_789",
+                    "type": "paywall.authorization.declined",
+                    "version": "2024-05-01",
+                    "createdAt": "2024-05-01T12:34:56Z",
+                    "status": "pending",
+                    "attempts": 1,
+                    "data": {
+                      "paywallId": "pw_live_123",
+                      "ownerUserId": "usr_owner_789",
+                      "externalUserId": "external_456",
+                      "walletUserId": "wallet_123",
+                      "requestId": "req_auth_789",
+                      "reason": "User prefers not to share data"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx to acknowledge receipt."
+          }
+        }
+      }
+    },
+    "paywall.balance.deposit.created": {
+      "post": {
+        "operationId": "on_paywall_balance_deposit_created",
+        "summary": "Balance deposit recorded",
+        "description": "Triggered when funds are deposited into a user's paywall balance.\n\nAllows finance and analytics tools to reconcile when a user balance increases.\n\n**Payload fields**: `paywallId`, `ownerUserId`, `walletUserId`, `externalUserId`, `amount`, `currency`, `source`, `activityId`.",
+        "tags": [
+          "Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PaywallEvent"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "paywall.balance.deposit.created"
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Payload fields: paywallId, ownerUserId, walletUserId, externalUserId, amount, currency, source, activityId."
+                      }
+                    },
+                    "required": [
+                      "data"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "example": {
+                  "summary": "Sample payload",
+                  "value": {
+                    "id": "paywall_balance_deposit_created_evt_123",
+                    "paywallId": "pw_live_123",
+                    "ownerUserId": "usr_owner_789",
+                    "type": "paywall.balance.deposit.created",
+                    "version": "2024-05-01",
+                    "createdAt": "2024-05-01T12:34:56Z",
+                    "status": "pending",
+                    "attempts": 1,
+                    "data": {
+                      "paywallId": "pw_live_123",
+                      "ownerUserId": "usr_owner_789",
+                      "walletUserId": "wallet_123",
+                      "externalUserId": "external_456",
+                      "amount": 50.0,
+                      "currency": "USD",
+                      "source": "stripe.checkout",
+                      "activityId": "act_9001"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx to acknowledge receipt."
+          }
+        }
+      }
+    },
+    "paywall.balance.topup.link.created": {
+      "post": {
+        "operationId": "on_paywall_balance_topup_link_created",
+        "summary": "Top-up link created",
+        "description": "Triggered when a top-up checkout link is generated for a user.\n\nEmitted whenever a reusable link is generated so client apps can share the URL with end users.\n\n**Payload fields**: `paywallId`, `ownerUserId`, `walletUserId`, `redirectUrl`, `checkoutSessionId`.",
+        "tags": [
+          "Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PaywallEvent"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "paywall.balance.topup.link.created"
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Payload fields: paywallId, ownerUserId, walletUserId, redirectUrl, checkoutSessionId."
+                      }
+                    },
+                    "required": [
+                      "data"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "example": {
+                  "summary": "Sample payload",
+                  "value": {
+                    "id": "paywall_balance_topup_link_created_evt_123",
+                    "paywallId": "pw_live_123",
+                    "ownerUserId": "usr_owner_789",
+                    "type": "paywall.balance.topup.link.created",
+                    "version": "2024-05-01",
+                    "createdAt": "2024-05-01T12:34:56Z",
+                    "status": "pending",
+                    "attempts": 1,
+                    "data": {
+                      "paywallId": "pw_live_123",
+                      "ownerUserId": "usr_owner_789",
+                      "walletUserId": "wallet_123",
+                      "redirectUrl": "https://paywalls.ai/top-up/checkoutSession_789",
+                      "checkoutSessionId": "cs_test_789"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx to acknowledge receipt."
+          }
+        }
+      }
+    },
+    "paywall.balance.trial.granted": {
+      "post": {
+        "operationId": "on_paywall_balance_trial_granted",
+        "summary": "Trial credits granted",
+        "description": "Triggered when trial credits are granted to a user.\n\nTracks complimentary credits so marketing and growth tooling maintain accurate lifetime value calculations.\n\n**Payload fields**: `paywallId`, `ownerUserId`, `walletUserId`, `credits`, `activityId`.",
+        "tags": [
+          "Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PaywallEvent"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "paywall.balance.trial.granted"
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Payload fields: paywallId, ownerUserId, walletUserId, credits, activityId."
+                      }
+                    },
+                    "required": [
+                      "data"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "example": {
+                  "summary": "Sample payload",
+                  "value": {
+                    "id": "paywall_balance_trial_granted_evt_123",
+                    "paywallId": "pw_live_123",
+                    "ownerUserId": "usr_owner_789",
+                    "type": "paywall.balance.trial.granted",
+                    "version": "2024-05-01",
+                    "createdAt": "2024-05-01T12:34:56Z",
+                    "status": "pending",
+                    "attempts": 1,
+                    "data": {
+                      "paywallId": "pw_live_123",
+                      "ownerUserId": "usr_owner_789",
+                      "walletUserId": "wallet_123",
+                      "credits": 500,
+                      "activityId": "act_trial_001"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx to acknowledge receipt."
+          }
+        }
+      }
+    },
+    "paywall.balance.charge.created": {
+      "post": {
+        "operationId": "on_paywall_balance_charge_created",
+        "summary": "Manual charge created",
+        "description": "Triggered when a manual charge is recorded against a user's balance.\n\nExposes new manual debits, enabling real-time billing dashboards.\n\n**Payload fields**: `paywallId`, `ownerUserId`, `walletUserId`, `activityId`, `amount`, `processingFeeAmount`.",
+        "tags": [
+          "Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PaywallEvent"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "paywall.balance.charge.created"
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Payload fields: paywallId, ownerUserId, walletUserId, activityId, amount, processingFeeAmount."
+                      }
+                    },
+                    "required": [
+                      "data"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "example": {
+                  "summary": "Sample payload",
+                  "value": {
+                    "id": "paywall_balance_charge_created_evt_123",
+                    "paywallId": "pw_live_123",
+                    "ownerUserId": "usr_owner_789",
+                    "type": "paywall.balance.charge.created",
+                    "version": "2024-05-01",
+                    "createdAt": "2024-05-01T12:34:56Z",
+                    "status": "pending",
+                    "attempts": 1,
+                    "data": {
+                      "paywallId": "pw_live_123",
+                      "ownerUserId": "usr_owner_789",
+                      "walletUserId": "wallet_123",
+                      "activityId": "act_charge_001",
+                      "amount": 15.75,
+                      "processingFeeAmount": 0.35
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx to acknowledge receipt."
+          }
+        }
+      }
+    },
+    "paywall.balance.charge.completed": {
+      "post": {
+        "operationId": "on_paywall_balance_charge_completed",
+        "summary": "Manual charge completed",
+        "description": "Triggered when a pending manual charge is marked as settled.\n\nSignals that a previously pending manual charge fully settled.\n\n**Payload fields**: `paywallId`, `ownerUserId`, `walletUserId`, `activityId`, `settlementReference`.",
+        "tags": [
+          "Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PaywallEvent"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "paywall.balance.charge.completed"
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Payload fields: paywallId, ownerUserId, walletUserId, activityId, settlementReference."
+                      }
+                    },
+                    "required": [
+                      "data"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "example": {
+                  "summary": "Sample payload",
+                  "value": {
+                    "id": "paywall_balance_charge_completed_evt_123",
+                    "paywallId": "pw_live_123",
+                    "ownerUserId": "usr_owner_789",
+                    "type": "paywall.balance.charge.completed",
+                    "version": "2024-05-01",
+                    "createdAt": "2024-05-01T12:34:56Z",
+                    "status": "pending",
+                    "attempts": 1,
+                    "data": {
+                      "paywallId": "pw_live_123",
+                      "ownerUserId": "usr_owner_789",
+                      "walletUserId": "wallet_123",
+                      "activityId": "act_charge_001",
+                      "settlementReference": "settlement_2024_05_01"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx to acknowledge receipt."
+          }
+        }
+      }
+    },
+    "paywall.balance.charge.failed": {
+      "post": {
+        "operationId": "on_paywall_balance_charge_failed",
+        "summary": "Manual charge failed",
+        "description": "Triggered when a manual charge attempt fails.\n\nHighlights manual charge failures so operators can investigate and retry if needed.\n\n**Payload fields**: `paywallId`, `ownerUserId`, `walletUserId`, `activityId`, `amount`, `errorCode`.",
+        "tags": [
+          "Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PaywallEvent"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "paywall.balance.charge.failed"
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Payload fields: paywallId, ownerUserId, walletUserId, activityId, amount, errorCode."
+                      }
+                    },
+                    "required": [
+                      "data"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "example": {
+                  "summary": "Sample payload",
+                  "value": {
+                    "id": "paywall_balance_charge_failed_evt_123",
+                    "paywallId": "pw_live_123",
+                    "ownerUserId": "usr_owner_789",
+                    "type": "paywall.balance.charge.failed",
+                    "version": "2024-05-01",
+                    "createdAt": "2024-05-01T12:34:56Z",
+                    "status": "pending",
+                    "attempts": 1,
+                    "data": {
+                      "paywallId": "pw_live_123",
+                      "ownerUserId": "usr_owner_789",
+                      "walletUserId": "wallet_123",
+                      "activityId": "act_charge_002",
+                      "amount": 15.75,
+                      "errorCode": "insufficient_funds"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx to acknowledge receipt."
+          }
+        }
+      }
+    },
+    "paywall.usage.charge.created": {
+      "post": {
+        "operationId": "on_paywall_usage_charge_created",
+        "summary": "Usage charge created",
+        "description": "Triggered when usage data creates a metered charge.\n\nFeeds usage-based billing metrics with token counts and resulting cost.\n\n**Payload fields**: `paywallId`, `ownerUserId`, `walletUserId`, `activityId`, `model`, `promptTokens`, `completionTokens`, `cost`.",
+        "tags": [
+          "Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PaywallEvent"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "paywall.usage.charge.created"
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Payload fields: paywallId, ownerUserId, walletUserId, activityId, model, promptTokens, completionTokens, cost."
+                      }
+                    },
+                    "required": [
+                      "data"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "example": {
+                  "summary": "Sample payload",
+                  "value": {
+                    "id": "paywall_usage_charge_created_evt_123",
+                    "paywallId": "pw_live_123",
+                    "ownerUserId": "usr_owner_789",
+                    "type": "paywall.usage.charge.created",
+                    "version": "2024-05-01",
+                    "createdAt": "2024-05-01T12:34:56Z",
+                    "status": "pending",
+                    "attempts": 1,
+                    "data": {
+                      "paywallId": "pw_live_123",
+                      "ownerUserId": "usr_owner_789",
+                      "walletUserId": "wallet_123",
+                      "activityId": "act_usage_001",
+                      "model": "gpt-4-turbo",
+                      "promptTokens": 1200,
+                      "completionTokens": 850,
+                      "cost": 0.018
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx to acknowledge receipt."
+          }
+        }
+      }
+    },
+    "paywall.usage.charge.deferred": {
+      "post": {
+        "operationId": "on_paywall_usage_charge_deferred",
+        "summary": "Usage charge deferred",
+        "description": "Triggered when a streaming request defers its usage charge.\n\nMarks a streaming request whose charge will be computed later once usage statistics arrive.\n\n**Payload fields**: `paywallId`, `ownerUserId`, `deferredRequestId`, `model`.",
+        "tags": [
+          "Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PaywallEvent"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "paywall.usage.charge.deferred"
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Payload fields: paywallId, ownerUserId, deferredRequestId, model."
+                      }
+                    },
+                    "required": [
+                      "data"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "example": {
+                  "summary": "Sample payload",
+                  "value": {
+                    "id": "paywall_usage_charge_deferred_evt_123",
+                    "paywallId": "pw_live_123",
+                    "ownerUserId": "usr_owner_789",
+                    "type": "paywall.usage.charge.deferred",
+                    "version": "2024-05-01",
+                    "createdAt": "2024-05-01T12:34:56Z",
+                    "status": "pending",
+                    "attempts": 1,
+                    "data": {
+                      "paywallId": "pw_live_123",
+                      "ownerUserId": "usr_owner_789",
+                      "deferredRequestId": "req_stream_456",
+                      "model": "gpt-4-turbo"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx to acknowledge receipt."
+          }
+        }
+      }
+    },
+    "paywall.usage.rate.limited": {
+      "post": {
+        "operationId": "on_paywall_usage_rate_limited",
+        "summary": "Usage rate limited",
+        "description": "Triggered when a request hits the usage rate limit.\n\nNotifies when a request is rate-limited so teams can monitor free-tier consumption.\n\n**Payload fields**: `paywallId`, `ownerUserId`, `limit`, `date`, `model`, `walletUserId`.",
+        "tags": [
+          "Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PaywallEvent"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "paywall.usage.rate.limited"
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Payload fields: paywallId, ownerUserId, limit, date, model, walletUserId."
+                      }
+                    },
+                    "required": [
+                      "data"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "example": {
+                  "summary": "Sample payload",
+                  "value": {
+                    "id": "paywall_usage_rate_limited_evt_123",
+                    "paywallId": "pw_live_123",
+                    "ownerUserId": "usr_owner_789",
+                    "type": "paywall.usage.rate.limited",
+                    "version": "2024-05-01",
+                    "createdAt": "2024-05-01T12:34:56Z",
+                    "status": "pending",
+                    "attempts": 1,
+                    "data": {
+                      "paywallId": "pw_live_123",
+                      "ownerUserId": "usr_owner_789",
+                      "limit": 1000,
+                      "date": "2024-05-01",
+                      "model": "gpt-4o-mini",
+                      "walletUserId": "wallet_123"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx to acknowledge receipt."
+          }
+        }
+      }
+    },
+    "paywall.balance.depleted": {
+      "post": {
+        "operationId": "on_paywall_balance_depleted",
+        "summary": "Balance depleted",
+        "description": "Triggered when a charge finds the user's balance insufficient.\n\nHelps trigger proactive outreach when a user attempts a charge with insufficient funds.\n\n**Payload fields**: `paywallId`, `ownerUserId`, `walletUserId`, `requestedAmount`, `availableBalance`.",
+        "tags": [
+          "Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PaywallEvent"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "paywall.balance.depleted"
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Payload fields: paywallId, ownerUserId, walletUserId, requestedAmount, availableBalance."
+                      }
+                    },
+                    "required": [
+                      "data"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "example": {
+                  "summary": "Sample payload",
+                  "value": {
+                    "id": "paywall_balance_depleted_evt_123",
+                    "paywallId": "pw_live_123",
+                    "ownerUserId": "usr_owner_789",
+                    "type": "paywall.balance.depleted",
+                    "version": "2024-05-01",
+                    "createdAt": "2024-05-01T12:34:56Z",
+                    "status": "pending",
+                    "attempts": 1,
+                    "data": {
+                      "paywallId": "pw_live_123",
+                      "ownerUserId": "usr_owner_789",
+                      "walletUserId": "wallet_123",
+                      "requestedAmount": 12.0,
+                      "availableBalance": 3.5
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx to acknowledge receipt."
+          }
+        }
+      }
+    },
+    "paywall.request.blocked": {
+      "post": {
+        "operationId": "on_paywall_request_blocked",
+        "summary": "Request blocked",
+        "description": "Triggered when a paywall request is blocked before reaching the provider.\n\nCommunicates high-level block reasons (authorization, balance, policy) to client applications.\n\n**Payload fields**: `paywallId`, `ownerUserId`, `walletUserId`, `reason`, `requestId`.",
+        "tags": [
+          "Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PaywallEvent"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "paywall.request.blocked"
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Payload fields: paywallId, ownerUserId, walletUserId, reason, requestId."
+                      }
+                    },
+                    "required": [
+                      "data"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "example": {
+                  "summary": "Sample payload",
+                  "value": {
+                    "id": "paywall_request_blocked_evt_123",
+                    "paywallId": "pw_live_123",
+                    "ownerUserId": "usr_owner_789",
+                    "type": "paywall.request.blocked",
+                    "version": "2024-05-01",
+                    "createdAt": "2024-05-01T12:34:56Z",
+                    "status": "pending",
+                    "attempts": 1,
+                    "data": {
+                      "paywallId": "pw_live_123",
+                      "ownerUserId": "usr_owner_789",
+                      "walletUserId": "wallet_123",
+                      "reason": "authorization_required",
+                      "requestId": "req_blocked_001"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx to acknowledge receipt."
+          }
+        }
+      }
+    },
+    "paywall.stripe.checkout.session.completed": {
+      "post": {
+        "operationId": "on_paywall_stripe_checkout_session_completed",
+        "summary": "Stripe checkout completed",
+        "description": "Triggered when a Stripe Checkout session for a paywall user succeeds.\n\nHelps reconcile Stripe settlements with internal balances.\n\n**Payload fields**: `paywallId`, `ownerUserId`, `checkoutSessionId`, `amount`, `currency`, `walletUserId`.",
+        "tags": [
+          "Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PaywallEvent"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "paywall.stripe.checkout.session.completed"
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Payload fields: paywallId, ownerUserId, checkoutSessionId, amount, currency, walletUserId."
+                      }
+                    },
+                    "required": [
+                      "data"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "example": {
+                  "summary": "Sample payload",
+                  "value": {
+                    "id": "paywall_stripe_checkout_session_completed_evt_123",
+                    "paywallId": "pw_live_123",
+                    "ownerUserId": "usr_owner_789",
+                    "type": "paywall.stripe.checkout.session.completed",
+                    "version": "2024-05-01",
+                    "createdAt": "2024-05-01T12:34:56Z",
+                    "status": "pending",
+                    "attempts": 1,
+                    "data": {
+                      "paywallId": "pw_live_123",
+                      "ownerUserId": "usr_owner_789",
+                      "checkoutSessionId": "cs_live_123",
+                      "amount": 42.0,
+                      "currency": "USD",
+                      "walletUserId": "wallet_123"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx to acknowledge receipt."
+          }
+        }
+      }
+    },
+    "paywall.proxy.request.started": {
+      "post": {
+        "operationId": "on_paywall_proxy_request_started",
+        "summary": "Proxy request started",
+        "description": "Triggered when the proxy receives a new request.\n\nMarks the beginning of a proxied LLM request for tracing and latency analysis.\n\n**Payload fields**: `paywallId`, `ownerUserId`, `requestId`, `walletUserId`, `model`.",
+        "tags": [
+          "Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PaywallEvent"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "paywall.proxy.request.started"
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Payload fields: paywallId, ownerUserId, requestId, walletUserId, model."
+                      }
+                    },
+                    "required": [
+                      "data"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "example": {
+                  "summary": "Sample payload",
+                  "value": {
+                    "id": "paywall_proxy_request_started_evt_123",
+                    "paywallId": "pw_live_123",
+                    "ownerUserId": "usr_owner_789",
+                    "type": "paywall.proxy.request.started",
+                    "version": "2024-05-01",
+                    "createdAt": "2024-05-01T12:34:56Z",
+                    "status": "pending",
+                    "attempts": 1,
+                    "data": {
+                      "paywallId": "pw_live_123",
+                      "ownerUserId": "usr_owner_789",
+                      "requestId": "proxy_req_001",
+                      "walletUserId": "wallet_123",
+                      "model": "gpt-4o-mini"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx to acknowledge receipt."
+          }
+        }
+      }
+    },
+    "paywall.proxy.request.completed": {
+      "post": {
+        "operationId": "on_paywall_proxy_request_completed",
+        "summary": "Proxy request completed",
+        "description": "Triggered when the proxy finishes handling a request successfully.\n\nIndicates the proxied request finished successfully.\n\n**Payload fields**: `paywallId`, `ownerUserId`, `requestId`, `walletUserId`, `model`.",
+        "tags": [
+          "Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PaywallEvent"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "paywall.proxy.request.completed"
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Payload fields: paywallId, ownerUserId, requestId, walletUserId, model."
+                      }
+                    },
+                    "required": [
+                      "data"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "example": {
+                  "summary": "Sample payload",
+                  "value": {
+                    "id": "paywall_proxy_request_completed_evt_123",
+                    "paywallId": "pw_live_123",
+                    "ownerUserId": "usr_owner_789",
+                    "type": "paywall.proxy.request.completed",
+                    "version": "2024-05-01",
+                    "createdAt": "2024-05-01T12:34:56Z",
+                    "status": "pending",
+                    "attempts": 1,
+                    "data": {
+                      "paywallId": "pw_live_123",
+                      "ownerUserId": "usr_owner_789",
+                      "requestId": "proxy_req_001",
+                      "walletUserId": "wallet_123",
+                      "model": "gpt-4o-mini"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx to acknowledge receipt."
+          }
+        }
+      }
+    },
+    "paywall.proxy.request.failed": {
+      "post": {
+        "operationId": "on_paywall_proxy_request_failed",
+        "summary": "Proxy request failed",
+        "description": "Triggered when the proxy encounters an error processing a request.\n\nCaptures failures for alerting and debugging within the proxy pipeline.\n\n**Payload fields**: `paywallId`, `ownerUserId`, `requestId`, `walletUserId`, `model`, `errorCode`.",
+        "tags": [
+          "Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PaywallEvent"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "paywall.proxy.request.failed"
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Payload fields: paywallId, ownerUserId, requestId, walletUserId, model, errorCode."
+                      }
+                    },
+                    "required": [
+                      "data"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "example": {
+                  "summary": "Sample payload",
+                  "value": {
+                    "id": "paywall_proxy_request_failed_evt_123",
+                    "paywallId": "pw_live_123",
+                    "ownerUserId": "usr_owner_789",
+                    "type": "paywall.proxy.request.failed",
+                    "version": "2024-05-01",
+                    "createdAt": "2024-05-01T12:34:56Z",
+                    "status": "pending",
+                    "attempts": 1,
+                    "data": {
+                      "paywallId": "pw_live_123",
+                      "ownerUserId": "usr_owner_789",
+                      "requestId": "proxy_req_002",
+                      "walletUserId": "wallet_123",
+                      "model": "gpt-4o-mini",
+                      "errorCode": "provider_timeout"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx to acknowledge receipt."
+          }
+        }
+      }
+    },
+    "paywall.proxy.request.canceled": {
+      "post": {
+        "operationId": "on_paywall_proxy_request_canceled",
+        "summary": "Proxy request canceled",
+        "description": "Triggered when a proxied request is canceled before completion.\n\nShows when a proxied request was aborted before completion.\n\n**Payload fields**: `paywallId`, `ownerUserId`, `requestId`, `walletUserId`, `model`.",
+        "tags": [
+          "Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PaywallEvent"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "paywall.proxy.request.canceled"
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Payload fields: paywallId, ownerUserId, requestId, walletUserId, model."
+                      }
+                    },
+                    "required": [
+                      "data"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "example": {
+                  "summary": "Sample payload",
+                  "value": {
+                    "id": "paywall_proxy_request_canceled_evt_123",
+                    "paywallId": "pw_live_123",
+                    "ownerUserId": "usr_owner_789",
+                    "type": "paywall.proxy.request.canceled",
+                    "version": "2024-05-01",
+                    "createdAt": "2024-05-01T12:34:56Z",
+                    "status": "pending",
+                    "attempts": 1,
+                    "data": {
+                      "paywallId": "pw_live_123",
+                      "ownerUserId": "usr_owner_789",
+                      "requestId": "proxy_req_003",
+                      "walletUserId": "wallet_123",
+                      "model": "gpt-4o-mini"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx to acknowledge receipt."
+          }
+        }
+      }
+    },
+    "paywall.proxy.request.blocked": {
+      "post": {
+        "operationId": "on_paywall_proxy_request_blocked",
+        "summary": "Proxy request blocked",
+        "description": "Triggered when the proxy blocks a request during routing.\n\nHighlights enforcement decisions made inside the proxy pipeline.\n\n**Payload fields**: `paywallId`, `ownerUserId`, `requestId`, `walletUserId`, `reason`.",
+        "tags": [
+          "Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PaywallEvent"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "paywall.proxy.request.blocked"
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Payload fields: paywallId, ownerUserId, requestId, walletUserId, reason."
+                      }
+                    },
+                    "required": [
+                      "data"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "example": {
+                  "summary": "Sample payload",
+                  "value": {
+                    "id": "paywall_proxy_request_blocked_evt_123",
+                    "paywallId": "pw_live_123",
+                    "ownerUserId": "usr_owner_789",
+                    "type": "paywall.proxy.request.blocked",
+                    "version": "2024-05-01",
+                    "createdAt": "2024-05-01T12:34:56Z",
+                    "status": "pending",
+                    "attempts": 1,
+                    "data": {
+                      "paywallId": "pw_live_123",
+                      "ownerUserId": "usr_owner_789",
+                      "requestId": "proxy_req_004",
+                      "walletUserId": "wallet_123",
+                      "reason": "policy_violation"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx to acknowledge receipt."
+          }
+        }
+      }
     }
   },
   "components": {
@@ -492,7 +2570,11 @@
       "MessageRole": {
         "type": "string",
         "description": "The role of the message author in the conversation.",
-        "enum": ["system", "user", "assistant"]
+        "enum": [
+          "system",
+          "user",
+          "assistant"
+        ]
       },
       "Message": {
         "type": "object",
@@ -534,7 +2616,7 @@
           },
           "description": {
             "type": "string",
-            "description": "Short summary of the model’s capabilities or intended use case."
+            "description": "Short summary of the model\u2019s capabilities or intended use case."
           },
           "pricing": {
             "$ref": "#/components/schemas/ModelPricing"
@@ -608,6 +2690,270 @@
           "message": "User is not connected to the paywall.",
           "url": "https://paywalls.ai/connect?..."
         }
+      },
+      "WebhookSubscription": {
+        "type": "object",
+        "description": "Configuration for a webhook endpoint that receives paywall events.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the subscription."
+          },
+          "paywallId": {
+            "type": "string",
+            "description": "Paywall identifier that owns this webhook."
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "HTTPS destination for webhook deliveries."
+          },
+          "events": {
+            "type": "array",
+            "description": "List of event keys (or `*`) that trigger deliveries.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Indicates whether deliveries are attempted."
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional human-readable label for the subscription."
+          },
+          "customHeaders": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Optional static headers included with every delivery."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "Identifier of the paywall owner that created the subscription."
+          },
+          "consecutiveFailures": {
+            "type": "integer",
+            "description": "Number of consecutive failed delivery attempts."
+          },
+          "lastDeliveredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of the most recent successful delivery."
+          },
+          "secretSuffix": {
+            "type": "string",
+            "description": "Last six characters of the signing secret for display purposes."
+          },
+          "secret": {
+            "type": "string",
+            "description": "Full signing secret, only returned right after creation."
+          }
+        },
+        "required": [
+          "id",
+          "paywallId",
+          "url",
+          "events",
+          "isActive",
+          "createdAt",
+          "updatedAt",
+          "secretSuffix"
+        ]
+      },
+      "WebhookSubscriptionCreateRequest": {
+        "type": "object",
+        "required": [
+          "url",
+          "events"
+        ],
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "HTTPS endpoint that will receive webhook deliveries."
+          },
+          "events": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            },
+            "description": "Event keys to subscribe to. Provide `*` to listen for all events."
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional description shown in dashboards (max 512 characters)."
+          },
+          "customHeaders": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Optional headers added to every webhook request."
+          },
+          "secret": {
+            "type": "string",
+            "description": "Provide a custom signing secret (minimum 16 characters)."
+          }
+        }
+      },
+      "PaywallEvent": {
+        "type": "object",
+        "description": "Paywall event payload that triggered the webhook delivery.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "paywallId": {
+            "type": "string"
+          },
+          "ownerUserId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "description": "Event key (see the `webhooks` section for the full catalog).",
+            "enum": [
+              "paywall.updated",
+              "paywall.archived",
+              "paywall.secret.rotated",
+              "paywall.integration.connected",
+              "paywall.integration.disconnected",
+              "paywall.integration.stripe.webhook.rotated",
+              "paywall.authorization.requested",
+              "paywall.authorization.completed",
+              "paywall.authorization.revoked",
+              "paywall.authorization.declined",
+              "paywall.balance.deposit.created",
+              "paywall.balance.topup.link.created",
+              "paywall.balance.trial.granted",
+              "paywall.balance.charge.created",
+              "paywall.balance.charge.completed",
+              "paywall.balance.charge.failed",
+              "paywall.usage.charge.created",
+              "paywall.usage.charge.deferred",
+              "paywall.usage.rate.limited",
+              "paywall.balance.depleted",
+              "paywall.request.blocked",
+              "paywall.stripe.checkout.session.completed",
+              "paywall.proxy.request.started",
+              "paywall.proxy.request.completed",
+              "paywall.proxy.request.failed",
+              "paywall.proxy.request.canceled",
+              "paywall.proxy.request.blocked"
+            ]
+          },
+          "version": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string"
+          },
+          "attempts": {
+            "type": "integer"
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Event-specific payload delivered with the webhook. Structure depends on the event type."
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "trigger": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "subject": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "id",
+          "paywallId",
+          "type",
+          "version",
+          "createdAt",
+          "status",
+          "attempts"
+        ]
+      },
+      "WebhookDeliveryLog": {
+        "type": "object",
+        "description": "Details about a webhook delivery attempt.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "subscriptionId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "success",
+              "error"
+            ]
+          },
+          "attempts": {
+            "type": "integer"
+          },
+          "lastAttemptAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "nextRetryAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "responseCode": {
+            "type": "integer"
+          },
+          "responseLatencyMs": {
+            "type": "integer"
+          },
+          "error": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "event": {
+            "$ref": "#/components/schemas/PaywallEvent"
+          }
+        },
+        "required": [
+          "id",
+          "subscriptionId",
+          "status",
+          "attempts",
+          "createdAt",
+          "updatedAt",
+          "event"
+        ]
       }
     },
     "securitySchemes": {

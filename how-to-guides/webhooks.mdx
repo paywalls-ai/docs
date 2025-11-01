@@ -1,0 +1,340 @@
+---
+title: "Webhooks Guide"
+description: "Use Paywalls webhooks to receive real-time notifications about important events."
+---
+
+Webhooks let you receive real-time notifications whenever something important
+happens inside a paywall. This guide walks through creating subscriptions,
+understanding deliveries, verifying signatures, and the catalog of events that
+can be emitted by the system.
+
+---
+
+## 1. Authentication and Base URL
+
+All webhook management endpoints live in the Paywalls API and require the
+`Authorization: Bearer <PAYWALL_SECRET>` header. Use the secret for the paywall
+you want to subscribe on behalf of. Requests without a valid key return `401`.
+
+Unless stated otherwise, example requests assume the API base URL is
+`https://api.paywalls.ai`.
+
+---
+
+## 2. Managing Subscriptions
+
+### 2.1 Create a subscription
+
+```http
+POST /v1/webhooks/subscriptions
+Authorization: Bearer sk-paywalls-v1-***
+Content-Type: application/json
+
+{
+  "url": "https://example.com/paywalls/events",
+  "events": ["paywall.updated", "paywall.balance.*"],
+  "description": "Send lifecycle + balance updates to billing service",
+  "customHeaders": {
+    "X-Source": "paywalls"
+  }
+}
+```
+
+- `url` – HTTPS endpoint that will receive deliveries.
+- `events` – array of event names. Use the wildcard `["*"]` to receive
+  everything. The wildcard cannot be mixed with other names.
+- `description` – optional, trimmed to 512 chars.
+- `customHeaders` – optional object of additional headers, max 10 entries.
+- `secret` – optional pre-shared secret. If omitted, one is generated.
+
+**Response (201)**  
+Returns the subscription without the full secret, except on creation where the
+secret is included once:
+
+```json
+{
+  "subscription": {
+    "id": "sub_123",
+    "paywallId": "pw_456",
+    "url": "https://example.com/paywalls/events",
+    "events": ["paywall.updated", "paywall.balance.*"],
+    "isActive": true,
+    "description": "Send lifecycle + balance updates to billing service",
+    "customHeaders": {
+      "X-Source": "paywalls"
+    },
+    "createdAt": "2024-06-10T14:32:12.448Z",
+    "updatedAt": "2024-06-10T14:32:12.448Z",
+    "secret": "whsec_************************",
+    "secretSuffix": "00f9a1",
+    "createdBy": "user_abc",
+    "consecutiveFailures": 0,
+    "lastDeliveredAt": null
+  }
+}
+```
+
+> ⚠️ Store the `secret` securely. It is only returned on creation; subsequent
+> reads show `secretSuffix` for diagnostics.
+
+### 2.2 List subscriptions
+
+```http
+GET /v1/webhooks/subscriptions?status=active
+Authorization: Bearer sk-paywalls-v1-***
+```
+
+- Optional `status` filter (`active` or `inactive`). The default returns both.
+
+### 2.3 Fetch a single subscription
+
+```http
+GET /v1/webhooks/subscriptions/{subscriptionId}
+Authorization: Bearer sk-paywalls-v1-***
+```
+
+### 2.4 Deactivate a subscription
+
+```http
+DELETE /v1/webhooks/subscriptions/{subscriptionId}
+Authorization: Bearer sk-paywalls-v1-***
+```
+
+Subscriptions are soft-deactivated (`isActive: false`) so you can re-enable
+them later via `PATCH /v1/webhooks/subscriptions/{id}` (not yet exposed via the
+REST surface).
+
+---
+
+## 3. Inspecting Delivery Logs
+
+```http
+GET /v1/webhooks/logs?subscriptionId=sub_123&status=error&limit=50
+Authorization: Bearer sk-paywalls-v1-***
+```
+
+Query parameters:
+
+| Parameter        | Description                                                |
+| ---------------- | ---------------------------------------------------------- |
+| `subscriptionId` | Optional – restrict to a single subscription.              |
+| `status`         | Optional – `pending`, `success`, or `error`.               |
+| `eventType`      | Optional – filter by an event name defined in the catalog. |
+| `limit`          | Optional – defaults to 20, max 100.                        |
+
+Each log entry includes delivery metadata (`id`, `status`, retries, timing) and
+the original event payload to help with debugging.
+
+---
+
+## 4. Delivery Payloads
+
+When a webhook fires, we POST the following JSON document to your `url`:
+
+```json
+{
+  "delivery": {
+    "id": "dly_abc123",
+    "subscriptionId": "sub_123",
+    "attempts": 1,
+    "createdAt": "2024-06-10T14:32:25.133Z",
+    "updatedAt": "2024-06-10T14:32:25.133Z"
+  },
+  "event": {
+    "id": "evt_456",
+    "paywallId": "pw_456",
+    "ownerUserId": "user_abc",
+    "type": "paywall.balance.deposit.created",
+    "version": "1.0",
+    "status": "pending",
+    "createdAt": "2024-06-10T14:32:24.921Z",
+    "trigger": {
+      "source": "api",
+      "actorType": "paywall-owner",
+      "actorId": "user_abc"
+    },
+    "subject": {
+      "type": "paywall.balance",
+      "id": "activity_123",
+      "externalId": "user_789"
+    },
+    "data": {
+      "paywallId": "pw_456",
+      "ownerUserId": "user_abc",
+      "walletUserId": "user_789",
+      "externalUserId": "user_789",
+      "amount": "25",
+      "currency": "usd",
+      "source": "stripe",
+      "activityId": "activity_123"
+    },
+    "metadata": {
+      "paymentIntent": "pi_12345"
+    }
+  }
+}
+```
+
+### 4.1 HTTP headers
+
+Each delivery includes signature headers so you can validate authenticity:
+
+| Header                 | Description                                                |
+| ---------------------- | ---------------------------------------------------------- |
+| `X-Paywalls-Event`     | `<eventType>@<version>` (e.g. `paywall.updated@1.0`).      |
+| `X-Paywalls-Signature` | Hex-encoded HMAC-SHA256 signature of the raw request body. |
+| `X-Paywalls-Timestamp` | ISO-8601 timestamp when the payload was generated.         |
+
+**Verification steps**
+
+1. Retrieve the subscription secret used for the delivery.
+2. Compute `HMAC_SHA256(secret, raw_request_body)` and hex-encode it.
+3. Compare to `X-Paywalls-Signature` using a constant-time comparison.
+4. Optionally ensure `X-Paywalls-Timestamp` is within an acceptable window (e.g.
+   5 minutes) to guard against replay attacks.
+
+### 4.2 Example: Validate signatures in JavaScript
+
+The snippet below shows a simple Node.js route that validates Grindery Paywalls signatures using the shared secret. It assumes you are using Express and have access to the raw request body.
+
+```ts
+import crypto from 'node:crypto'
+import type { Request, Response } from 'express'
+
+function verifySignature(secret: string, payload: string, signature: string): boolean {
+  const computed = crypto.createHmac('sha256', secret).update(payload).digest('hex')
+  // Use timingSafeEqual to avoid leaking timing information
+  const expected = Buffer.from(computed, 'hex')
+  const received = Buffer.from(signature, 'hex')
+  if (expected.length !== received.length) {
+    return false
+  }
+  return crypto.timingSafeEqual(expected, received)
+}
+
+export async function handlePaywallsWebhook(req: Request, res: Response) {
+  const secret = process.env.PAYWALLS_WEBHOOK_SECRET
+  if (!secret) {
+    res.status(500).send('Webhook secret not configured')
+    return
+  }
+
+  const body = req.rawBody?.toString('utf8') ?? '' // Ensure raw body middleware is configured
+  const signature = req.header('X-Paywalls-Signature') ?? ''
+  const timestamp = req.header('X-Paywalls-Timestamp') ?? ''
+
+  // Optional: reject stale timestamps (example uses 5 minutes)
+  const FIVE_MINUTES_MS = 5 * 60 * 1000
+  const timestampMs = Date.parse(timestamp)
+  if (!timestamp || isNaN(timestampMs) || Math.abs(Date.now() - timestampMs) > FIVE_MINUTES_MS) {
+    res.status(400).send('Stale or missing timestamp')
+    return
+  }
+
+  if (!signature || !verifySignature(secret, body, signature)) {
+    res.status(400).send('Invalid signature')
+  }
+
+  let payload
+  try {
+    payload = JSON.parse(body)
+  } catch (err) {
+    res.status(400).send('Invalid JSON payload')
+    return
+  }
+  // Process the delivery payload...
+  res.status(200).send('ok')
+}
+}
+```
+
+> Make sure your framework exposes the raw request body (Express requires enabling the `verify` option on the JSON body parser or a raw-body middleware).
+
+---
+
+## 5. Delivery Semantics & Retries
+
+- Deliveries default to 30-second base backoff with jitter and double on each
+  retry (configurable via environment variables).
+- We retry up to `WEBHOOK_MAX_ATTEMPTS` (defaults to 8). Non-retryable status
+  codes (`400`, `401`, `403`, `404`, `410`, `422`) end the delivery immediately
+  with an error.
+
+---
+
+## 6. Event Catalog
+
+Events are grouped into categories. The tables below list the event key,
+description, and payload fields that appear under `event.data`.
+
+### 6.1 Paywall lifecycle
+
+| Event                    | Description             | Payload fields                                                       |
+| ------------------------ | ----------------------- | -------------------------------------------------------------------- |
+| `paywall.updated`        | Settings changed.       | `paywallId`, `ownerUserId`, `changedFields`, `summarySections`       |
+| `paywall.archived`       | Paywall archived.       | `paywallId`, `ownerUserId`, `reason`                                 |
+| `paywall.secret.rotated` | API secret regenerated. | `paywallId`, `ownerUserId`, `secretLastFour`, `actorId`, `actorType` |
+
+> Paywall creation does not emit a webhook because subscriptions can only be configured after a paywall exists.
+
+### 6.2 Integrations
+
+| Event                                        | Description                        | Payload fields                                                 |
+| -------------------------------------------- | ---------------------------------- | -------------------------------------------------------------- |
+| `paywall.integration.connected`              | Integration enabled.               | `paywallId`, `ownerUserId`, `integrationKey`, `enabledBy`      |
+| `paywall.integration.disconnected`           | Integration disabled.              | `paywallId`, `ownerUserId`, `integrationKey`, `disabledBy`     |
+| `paywall.integration.stripe.webhook.rotated` | Stripe webhook endpoint recreated. | `paywallId`, `ownerUserId`, `webhookId`, `url`, `secretSuffix` |
+
+### 6.3 User authorization
+
+| Event                             | Description                     | Payload fields                                                                                   |
+| --------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `paywall.authorization.requested` | User approval required.         | `paywallId`, `ownerUserId`, `externalUserId`, `walletUserId`, `requestId`, `approvalUrl`, `mode` |
+| `paywall.authorization.completed` | User connected successfully.    | `paywallId`, `ownerUserId`, `externalUserId`, `walletUserId`, `connectionId`                     |
+| `paywall.authorization.revoked`   | Connection removed.             | `paywallId`, `ownerUserId`, `externalUserId`, `walletUserId`                                     |
+| `paywall.authorization.declined`  | Authorization request declined. | `paywallId`, `ownerUserId`, `externalUserId`, `walletUserId`, `requestId`, `reason`              |
+
+### 6.4 Balances & funds
+
+| Event                                | Description                  | Payload fields                                                                                             |
+| ------------------------------------ | ---------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `paywall.balance.deposit.created`    | Balance deposit recorded.    | `paywallId`, `ownerUserId`, `walletUserId`, `externalUserId`, `amount`, `currency`, `source`, `activityId` |
+| `paywall.balance.topup.link.created` | Top-up checkout link issued. | `paywallId`, `ownerUserId`, `walletUserId`, `redirectUrl`, `checkoutSessionId`                             |
+| `paywall.balance.trial.granted`      | Trial credits granted.       | `paywallId`, `ownerUserId`, `walletUserId`, `credits`, `activityId`                                        |
+
+### 6.5 Charges & usage
+
+| Event                              | Description                                     | Payload fields                                                                                                |
+| ---------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `paywall.balance.charge.created`   | Manual or virtual charge recorded.              | `paywallId`, `ownerUserId`, `walletUserId`, `activityId`, `amount`, `processingFeeAmount`                     |
+| `paywall.balance.charge.completed` | Charge marked as settled.                       | `paywallId`, `ownerUserId`, `activityId`, `settlementReference`                                               |
+| `paywall.balance.charge.failed`    | Charge attempt failed.                          | `paywallId`, `ownerUserId`, `walletUserId`, `activityId`, `amount`, `errorCode`                               |
+| `paywall.usage.charge.created`     | Usage-based charge computed.                    | `paywallId`, `ownerUserId`, `walletUserId`, `activityId`, `model`, `promptTokens`, `completionTokens`, `cost` |
+| `paywall.usage.charge.deferred`    | Streaming charge deferred until usage is known. | `paywallId`, `ownerUserId`, `deferredRequestId`, `model`                                                      |
+| `paywall.usage.rate.limited`       | Request hit usage rate limit.                   | `paywallId`, `ownerUserId`, `limit`, `date`, `model`, `walletUserId`                                          |
+| `paywall.balance.depleted`         | Insufficient balance for a charge.              | `paywallId`, `ownerUserId`, `walletUserId`, `requestedAmount`, `availableBalance`                             |
+| `paywall.request.blocked`          | Request blocked pre-provider.                   | `paywallId`, `ownerUserId`, `walletUserId`, `reason`, `requestId`                                             |
+
+### 6.6 Payments (Stripe)
+
+| Event                                       | Description                        | Payload fields                                                                        |
+| ------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------- |
+| `paywall.stripe.checkout.session.completed` | Stripe Checkout session succeeded. | `paywallId`, `ownerUserId`, `checkoutSessionId`, `amount`, `currency`, `walletUserId` |
+
+### 6.7 Proxy events
+
+| Event                             | Description                               | Payload fields                                                                |
+| --------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------- |
+| `paywall.proxy.request.started`   | Proxy received a request.                 | `paywallId`, `ownerUserId`, `requestId`, `walletUserId`, `model`              |
+| `paywall.proxy.request.completed` | Request completed successfully.           | `paywallId`, `ownerUserId`, `requestId`, `walletUserId`, `model`              |
+| `paywall.proxy.request.failed`    | Request failed inside the proxy.          | `paywallId`, `ownerUserId`, `requestId`, `walletUserId`, `model`, `errorCode` |
+| `paywall.proxy.request.canceled`  | Request was aborted before completion.    | `paywallId`, `ownerUserId`, `requestId`, `walletUserId`, `model`              |
+| `paywall.proxy.request.blocked`   | Proxy blocked the request during routing. | `paywallId`, `ownerUserId`, `requestId`, `walletUserId`, `reason`             |
+
+---
+
+## 7. Next Steps
+
+- Rotate webhook secrets periodically and update your consumer accordingly.
+- Monitor `/v1/webhooks/logs` for failed deliveries; retry or investigate issues surfaced via the webhook delivery logs API.
+- Use the event catalog to build targeted reactions rather than subscribing to `*` when possible—smaller workloads mean faster, more reliable processing.
