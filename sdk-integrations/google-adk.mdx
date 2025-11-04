@@ -1,0 +1,100 @@
+---
+title: "Google ADK"
+---
+
+Use the Paywalls OpenAI-compatible proxy as a drop-in model backend for the [Google Agent Development Kit (ADK)](https://google.github.io/adk-docs/agents/models/). ADK wraps providers through [LiteLLM](https://docs.litellm.ai), so you can point it at the Paywalls base URL, keep OpenAI-style request payloads, and let Paywalls handle metering, pricing, and paywall responses.
+
+## Prerequisites
+
+- A configured Paywalls paywall (see [Quickstart](/quickstart)) with a model mapped to the proxy.
+- A Paywalls API key (`sk-paywalls-...`) and base URL `https://api.paywalls.ai/v1`.
+- An ADK project with `google-adk` and `litellm` installed (per the “Using Cloud & Proprietary Models via LiteLLM” section of the ADK docs).
+- Runtime access to a stable, pseudonymous user identifier that you can forward on every request.
+
+## 1. Configure the Paywalls proxy
+
+1. In the Paywalls dashboard, choose your paywall mode (Default or Shared) and connect the provider you want ADK to call.
+2. Map the upstream model name (e.g., `openai/gpt-4o-mini`) to Paywalls pricing.
+3. Copy your Paywalls API key and note the proxy base URL: `https://api.paywalls.ai/v1`.
+4. Decide how you will supply the Paywalls user context. Paywalls requires either the body-level `user` field or an `X-Paywall-User` header on every call.
+
+<Info>
+  The proxy returns normal assistant messages when a user must authorize or top
+  up. Render them as-is to give end-users the correct paywall UX with zero
+  branching.
+</Info>
+
+## 2. Point LiteLLM to Paywalls
+
+ADK’s LiteLLM wrapper expects OpenAI-style environment variables. Set them to your Paywalls values (note the required `/v1` suffix, as highlighted in the ADK “Using openai provider” guidance).
+
+```bash
+pip install litellm  # if you have not already
+
+export PAYWALLS_API_KEY="sk-paywalls-…"   # keep server-side
+export OPENAI_API_KEY="$PAYWALLS_API_KEY"
+export OPENAI_API_BASE="https://api.paywalls.ai/v1"
+```
+
+If you manage configuration through `.env` files or secrets managers, mirror the same values there. The Paywalls key now feeds LiteLLM exactly as an OpenAI key would.
+
+## 3. Instantiate an ADK agent that targets Paywalls
+
+Create your agent with the LiteLLM wrapper and use the Paywalls-backed model name. Everything else—tools, instructions, streaming—works identically to the standard ADK examples.
+
+```python
+from google.adk.agents import LlmAgent
+from google.adk.models.lite_llm import LiteLlm
+
+paywalls_agent = LlmAgent(
+    model=LiteLlm(model="openai/gpt-4o-mini"),
+    name="paywalls_proxy_agent",
+    instruction="You are a metered assistant running through Paywalls.",
+    # … add tools or additional configuration as needed
+)
+```
+
+- Pick any model identifier that your paywall routes (e.g., `openai/gpt-4o`, `anthropic/claude-3-haiku`).
+- Paywalls can relay to Bring-Your-Own-Key providers or the built-in catalog; the agent code stays unchanged.
+
+## 4. Forward the Paywalls user identifier
+
+Paywalls enforces spend and renders paywall actions per end user. Thread your application’s user handle into each ADK session and make sure it reaches LiteLLM as either the `user` body field or `X-Paywall-User` header.
+
+```python
+from google.adk.sessions import InMemorySessionService
+
+session_service = InMemorySessionService()
+session = await session_service.create_session(
+    app_name="my_adk_app",
+    user_id="user_123",  # stable pseudonymous id required by Paywalls
+)
+```
+
+When you invoke the agent (via an ADK Runner, the Agent Runtime API, or your own orchestration), pass that `session.user_id` along:
+
+- If you call `LiteLlm` directly, include `user=session.user_id` in the OpenAI-compatible payload.
+- If you rely on headers (e.g., for shared middleware), add `X-Paywall-User: session.user_id` through LiteLLM’s request configuration or HTTP client hooks.
+
+Either approach satisfies the proxy requirement and keeps ledger entries correctly attributed.
+
+<Note>
+  Double-check that retries or parallel tool calls reuse the same user id. If
+  the identifier is missing or changes mid-thread, Paywalls will decline the
+  request.
+</Note>
+
+## 5. Test the end-to-end flow
+
+1. Run an ADK interaction against your agent and confirm the response completes normally.
+2. In the Paywalls dashboard, verify that the request appears under **Proxy → Requests** with the correct model, user, and pricing rule.
+3. Trigger a low-balance or unauthorized scenario to see the proxy return an assistant message instructing the user to authorize or top up; ensure your UI renders it verbatim.
+
+## Troubleshooting
+
+- **401 or 403 errors:** Confirm `OPENAI_API_KEY` is the Paywalls key and that the paywall is in the correct mode for your environment (test vs. live).
+- **404 from LiteLLM/ADK:** Ensure the model string matches a Paywalls-mapped provider model.
+- **Missing billing events:** Re-check that every request carries a stable `user` field or `X-Paywall-User` header; without it, Paywalls drops the call before metering.
+- **Local testing on Windows:** Follow the ADK LiteLLM note to set `PYTHONUTF8=1` if you hit encoding issues.
+
+Once the proxy is wired up, you can add Paywalls features (webhooks, custom proxy responses, analytics) without revisiting the ADK-side integration—the OpenAI-compatible interface remains stable.
