@@ -1,0 +1,219 @@
+---
+title: "Use Paywalls with Open WebUI"
+description: "Enable usage-based monetization for your Open WebUI deployment using Paywalls."
+---
+
+This guide shows how to turn any self-hosted [Open
+WebUI](https://openwebui.com) instance into a usage-based, billable chat
+experience powered by Paywalls.
+
+<Columns cols={2}>
+
+You’ll point Open WebUI’s OpenAI-compatible
+connector to Paywalls, ensure every chat request carries the right user
+identity for metering, and end up with automatic per-user pricing, rate
+limits, and reporting—without changing your users’ workflow.
+
+![Open WebUI with
+  Paywalls](/images/use-paywalls-with-openwebui/screenshot-1.png)
+
+</Columns>
+
+## Prerequisites
+
+- Paywalls API key (Dashboard → Paywall → API keys)
+- Open WebUI admin access (so you can edit Connections and Filters)
+
+## 1. Add Paywalls as the OpenAI-compatible Connection
+
+<Steps>
+
+<Step title="Open the Connections page">
+
+<Columns cols={2}>
+
+In Open WebUI click your avatar → <b>Admin Panel</b> → <b>Connections</b> → <b>+ New Connection</b>.
+
+![Open WebUI Connections](/images/use-paywalls-with-openwebui/screenshot-2.png)
+
+</Columns>
+
+</Step>
+
+<Step title="Configure the endpoint">
+
+<Columns cols={2}>
+
+<div>
+Fill the form with the Paywalls details:
+
+<br />
+<br />
+
+<ul class="list-disc list-inside">
+  <li class="mb-3">
+    <b>Provider</b>: OpenAI Compatible - <b>Base URL</b>:
+    `https://api.paywalls.ai/v1`
+  </li>
+  <li class="mb-3">
+    - <b>API Key</b>: `sk-paywalls-...` (copied from the dashboard)
+  </li>
+  <li class="mb-3">
+    - <b>Default model</b>: pick one of the Paywalls backed models, e.g.
+    `openai/gpt-4o-mini` or leave empty to load all models dynamically.
+  </li>
+</ul>
+
+Save the connection and (optionally) set it as the default for your workspace so
+every model inherits it automatically.
+
+</div>
+
+![Open WebUI Configure Endpoint](/images/use-paywalls-with-openwebui/screenshot-3.png)
+
+</Columns>
+
+</Step>
+
+</Steps>
+
+## 2. Capture user identity for accurate billing
+
+<div class="py-4">
+
+<Info>
+
+Paywalls meters usage per end user. Every request must include a stable user identifier via the body-level <code>user</code> field or the <code>X-Paywall-User</code> header (see <a href="/how-to-guides/pass-user-id">Pass user ID</a> for the full rationale).
+
+</Info>
+
+</div>
+
+<Columns cols={2}>
+
+Open WebUI filters can rewrite the JSON payload that is sent to every model. We'll add one that copies the signed-in user’s WebUI handle into the Paywalls-required `user` field so every completion and tool call is attributed (and billed) correctly.
+
+![Open WebUI Filters](/images/use-paywalls-with-openwebui/screenshot-4.png)
+
+</Columns>
+
+<Steps>
+
+<Step title="Add a new filter">
+  
+  Go to Admin Panel → <b>Functions</b> → <b>Filters</b> → <b>+ New Filter</b>,
+  name it `Paywalls user injector`, choose `Python`, and paste the snippet
+  below.
+
+```python
+import re
+from pydantic import BaseModel, Field
+
+class Filter:
+  class Valves(BaseModel):
+      prefix: str = Field(
+          default="webui",
+          description="Prepended to every user handle to keep it unique per deployment.",
+      )
+
+  def __init__(self):
+      self.valves = self.Valves()
+
+  def inlet(self, body: dict, __user__: dict) -> dict:
+      # Prefer username, then email user part, then fallback to the numeric WebUI id
+      login = (
+          __user__.get("username")
+          or (__user__.get("email") or "").split("@")[0]
+          or f"id_{__user__.get('id')}"
+      )
+      safe = re.sub(r"[^A-Za-z0-9_-]", "_", login) or "unknown"
+      body["user"] = f"{self.valves.prefix}_{safe}"
+      return body
+```
+
+<Info>
+  Open WebUI passes the signed-in user's metadata via <code>__user__</code> when
+  running filters (see [Filter Function
+  docs](https://docs.openwebui.com/features/plugin/functions/filter/)).
+  Returning the modified <code>body</code> makes the change effective for the
+  upstream API request.
+</Info>
+
+</Step>
+
+<Step title="Attach the filter to your models">
+
+<Columns cols={2}>
+
+<ul>
+
+<li class="mb-3">
+  1. Go to **Workspace → Models** and open each chat model that should charge
+  through Paywalls.
+</li>
+<li class="mb-3">
+  2. Scroll to **Tools / Filters / Actions**, enable **Filters**, and add
+  **Paywalls user injector** to the active list.
+</li>
+<li class="mb-3">
+  3. Save the modelfile. Repeat for every model that should hit Paywalls.
+</li>
+
+</ul>
+
+![Open WebUI Attach Filter](/images/use-paywalls-with-openwebui/screenshot-5.png)
+
+</Columns>
+
+</Step>
+
+</Steps>
+
+## 3. Test the integration
+
+<Steps>
+  
+<Step title="Start a new chat">
+  Open WebUI main interface and start a new chat with a model that uses the
+  Paywalls connection.
+</Step>
+
+<Step title="Send a prompt">
+  Send a short prompt, e.g. <code>Hello!</code>. The model should respond
+  normally, but if your Paywalls balance is zero you’ll get a topup message
+  instead.
+</Step>
+
+<Step title="Top up and check billing log">
+
+  <Columns cols={2}>
+  
+  Once you top up your Paywalls balance, send the message again. In the
+  Paywalls dashboard → Paywall → Reports view you should see the billing log
+  with the <code>user</code> you injected (e.g. <code>webui_jane</code>).
+
+![Paywalls Billing Log](/images/use-paywalls-with-openwebui/screenshot-6.png)
+
+  </Columns>
+
+</Step>
+  
+</Steps>
+
+## Related
+
+<Columns cols={2}>
+
+<Card title="Pass user ID" icon="id-card" href="/how-to-guides/pass-user-id">
+  Full overview of all supported Paywalls user identity mechanisms.
+</Card>
+
+<Card
+  title="Workspace → Models"
+  icon="sparkles"
+  href="https://docs.openwebui.com/features/workspace/models/"
+>
+  Open WebUI’s reference for managing models, filters, and tools.
+</Card>
+
+</Columns>
