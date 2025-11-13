@@ -91,7 +91,7 @@ Paywalls meters usage per end user. Every request must include a stable user ide
 
 <Columns cols={2}>
 
-Open WebUI filters can rewrite the JSON payload that is sent to every model. We'll add one that copies the signed-in user’s WebUI handle into the Paywalls-required `user` field so every completion and tool call is attributed (and billed) correctly.
+Open WebUI filters can rewrite the JSON payload that is sent to every model. We'll add one that copies the signed-in user’s WebUI ID into the Paywalls-required `user` field so every completion and tool call is attributed (and billed) correctly.
 
 ![Open WebUI Filters](/images/use-paywalls-with-openwebui/screenshot-4.png)
 
@@ -120,12 +120,8 @@ class Filter:
       self.valves = self.Valves()
 
   def inlet(self, body: dict, __user__: dict) -> dict:
-      # Prefer username, then email user part, then fallback to the numeric WebUI id
-      login = (
-          __user__.get("username")
-          or (__user__.get("email") or "").split("@")[0]
-          or f"id_{__user__.get('id')}"
-      )
+      # numeric WebUI user id with prefix and safe chars
+      login = f"id_{__user__.get('id')}"
       safe = re.sub(r"[^A-Za-z0-9_-]", "_", login) or "unknown"
       body["user"] = f"{self.valves.prefix}_{safe}"
       return body
@@ -190,7 +186,7 @@ class Filter:
   
   Once you top up your Paywalls balance, send the message again. In the
   Paywalls dashboard → Paywall → Reports view you should see the billing log
-  with the <code>user</code> you injected (e.g. <code>webui_jane</code>).
+  with the <code>user</code> you injected (e.g. <code>id_1234567</code>).
 
 ![Paywalls Billing Log](/images/use-paywalls-with-openwebui/screenshot-6.png)
 
